@@ -222,6 +222,8 @@ GameObject:
   - component: {fileID: 1226818241}
   - component: {fileID: 1226818240}
   - component: {fileID: 1226818239}
+  - component: {fileID: 1226818242}
+  - component: {fileID: 1226818243}
   m_Layer: 0
   m_Name: starShip_0
   m_TagString: Untagged
@@ -313,6 +315,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1226818242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8213fa38552ad5542b952d4d8ecbc546, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1226818243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f32122e64a61c9a4da6ce7699e30fe0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1537377821
 GameObject:
   m_ObjectHideFlags: 0
