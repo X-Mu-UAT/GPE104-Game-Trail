@@ -399,6 +399,8 @@ GameObject:
   - component: {fileID: 1226818242}
   - component: {fileID: 1226818243}
   - component: {fileID: 1226818245}
+  - component: {fileID: 1226818247}
+  - component: {fileID: 1226818246}
   m_Layer: 0
   m_Name: starShip_0
   m_TagString: Untagged
@@ -530,6 +532,35 @@ MonoBehaviour:
   maxX: 5
   minY: -3
   maxY: 3
+--- !u!114 &1226818246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13c1455982a3b19429e5af9def3d0979, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  possessedShip: {fileID: 1226818247}
+--- !u!114 &1226818247
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c90f974adf072a40a942255bfd741a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  localSpeed: 5
+  turboSpeed: 10
+  rotationSpeed: 180
+  worldSpeed: 5
 --- !u!1 &2005228422
 GameObject:
   m_ObjectHideFlags: 0

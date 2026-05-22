@@ -16,7 +16,7 @@ public class RandomSpritePlacer : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.anyKeyDown)
+        if (Input.GetKeyDown(KeyCode.T))
         {
             // Generate a random x and y position within the specified bounds
             float randomX = Random.Range(minX, maxX);
