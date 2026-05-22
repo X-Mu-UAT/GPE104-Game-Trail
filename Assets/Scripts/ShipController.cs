@@ -2,15 +2,18 @@ using UnityEngine;
 
 public class ShipController : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    // 
     {
-        
+    // Always remember variablesbgo at the very top
+    [Header(”Possessed Pawn”)]
+    public ShipMovement possessedShip;
+    Remember unity’s update method runs every frame
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+    // Safety check: if you forgot to drag the ship in, do nothing
+    if (possesedShip == null) return;
     }
 }
