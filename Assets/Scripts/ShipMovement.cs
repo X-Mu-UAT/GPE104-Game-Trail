@@ -27,6 +27,7 @@ transform.Rotate(Vector3.forward * -horizontalInput * rotationSpeed * Time.delta
 //Action 3: Handles Arrow keys moving globally
 public void MoveWorld(Vector2 direction)
     {
-        
+        Vector3 worldDirection = new Vector3(direction.x, direction.y, 0f);
+        transform.Translate(worldDirection * worldSpeed * Time.deltaTime, Space.World);
     }
-}
+}// This curly brace closes the whole script
