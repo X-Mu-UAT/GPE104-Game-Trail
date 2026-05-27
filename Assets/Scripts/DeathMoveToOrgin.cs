@@ -11,7 +11,7 @@ public class DeathMoveToOrgin : Death
 
     public override void Die()
     {
-        TriggerEffects();
+        
         transform.position = startPosition;
     }
 }

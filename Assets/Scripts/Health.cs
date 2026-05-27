@@ -14,7 +14,7 @@ public class Health : MonoBehaviour
     public void TakeDamage(int damageAmount)
     {
         currentHealth -= damageAmount;
-        if (currentHealth <= 0)
+        if (currentHealth <= 0) return;
         {
             // Get the Death component on this GameObject   
             Death deathComponent = GetComponent<Death>();
