@@ -129,6 +129,8 @@ GameObject:
   m_Component:
   - component: {fileID: 188628011}
   - component: {fileID: 188628010}
+  - component: {fileID: 188628013}
+  - component: {fileID: 188628012}
   m_Layer: 0
   m_Name: meteor_0 (1)
   m_TagString: Untagged
@@ -206,6 +208,48 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &188628012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188628009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9540c785d6047c2479b7d69036b2c3fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDeathEffects:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 188628012}
+        m_TargetAssemblyTypeName: DeathDestroy, Assembly-CSharp
+        m_MethodName: Die
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  explosionPrefab: {fileID: 188628009}
+--- !u!114 &188628013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188628009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09757770c4bd9054ea571ccbe750a2fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  currentHealth: 100
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -308,6 +352,8 @@ GameObject:
   m_Component:
   - component: {fileID: 740324462}
   - component: {fileID: 740324461}
+  - component: {fileID: 740324464}
+  - component: {fileID: 740324463}
   m_Layer: 0
   m_Name: meteor_0 (2)
   m_TagString: Untagged
@@ -385,6 +431,48 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &740324463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 740324460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9540c785d6047c2479b7d69036b2c3fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDeathEffects:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 740324463}
+        m_TargetAssemblyTypeName: DeathDestroy, Assembly-CSharp
+        m_MethodName: Die
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  explosionPrefab: {fileID: 0}
+--- !u!114 &740324464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 740324460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09757770c4bd9054ea571ccbe750a2fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  currentHealth: 100
 --- !u!1 &1226818238
 GameObject:
   m_ObjectHideFlags: 0
@@ -401,6 +489,9 @@ GameObject:
   - component: {fileID: 1226818245}
   - component: {fileID: 1226818247}
   - component: {fileID: 1226818246}
+  - component: {fileID: 1226818249}
+  - component: {fileID: 1226818248}
+  - component: {fileID: 1226818250}
   m_Layer: 0
   m_Name: starShip_0
   m_TagString: Untagged
@@ -561,6 +652,48 @@ MonoBehaviour:
   turboSpeed: 10
   rotationSpeed: 180
   worldSpeed: 5
+--- !u!114 &1226818248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9540c785d6047c2479b7d69036b2c3fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDeathEffects:
+    m_PersistentCalls:
+      m_Calls: []
+  explosionPrefab: {fileID: 0}
+--- !u!114 &1226818249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09757770c4bd9054ea571ccbe750a2fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  currentHealth: 100
+--- !u!114 &1226818250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1226818238}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87ae9b083010666408763b63d6f2b488, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2005228422
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,6 +704,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2005228424}
   - component: {fileID: 2005228423}
+  - component: {fileID: 2005228427}
+  - component: {fileID: 2005228426}
+  - component: {fileID: 2005228425}
   m_Layer: 0
   m_Name: meteor_0
   m_TagString: Untagged
@@ -642,12 +778,70 @@ Transform:
   m_GameObject: {fileID: 2005228422}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.2, y: 2.7, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -1.3696, y: 2.9544, z: 0}
+  m_LocalScale: {x: 0.6538, y: 0.4699, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2005228425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2005228422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9540c785d6047c2479b7d69036b2c3fe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDeathEffects:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2005228425}
+        m_TargetAssemblyTypeName: DeathDestroy, Assembly-CSharp
+        m_MethodName: Die
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  explosionPrefab: {fileID: 0}
+--- !u!114 &2005228426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2005228422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fc518dc91a35a947b2bd6621d16b0d3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onDeathEffects:
+    m_PersistentCalls:
+      m_Calls: []
+  startPosition: {x: 0, y: 0, z: 0}
+--- !u!114 &2005228427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2005228422}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09757770c4bd9054ea571ccbe750a2fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 20
+  currentHealth: 20
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
