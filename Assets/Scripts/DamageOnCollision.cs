@@ -10,6 +10,7 @@ public class DamageOnCollision : MonoBehaviour
     {
         DealDamage(other.gameObject);
     }
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         DealDamage(collision.gameObject);
     }
@@ -23,15 +24,14 @@ public class DamageOnCollision : MonoBehaviour
         }
         if (isInstantKill)
         {
-            Death deathCompnent = objectHit.GetComponent<Death>();
+            Death deathComponent = objectHit.GetComponent<Death>();
             if (deathComponent != null)
             {
-
-            Debug.Log(gameObject.name + “ instantly killed “ + objectHit.name);
-            deathComponent.Die();
+                Debug.Log(gameObject.name + " instantly killed " + objectHit.name);
+                deathComponent.Die();
+            }
+            return;
         }
-        return;
-    }
     targetHealth.TakeDamage(damageAmount);
 }
 }
