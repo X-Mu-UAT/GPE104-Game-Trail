@@ -2,7 +2,8 @@ using UnityEngine;
 
 public class DamageOnCollision : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public bool isInstantKill = false;
+// How much damage this object deals if it is not an instant kill
     public int damageAmount = 25;
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -16,11 +17,22 @@ public class DamageOnCollision : MonoBehaviour
     {
         Health targetHealth = objectHit.GetComponent<Health>();
 
-        if (targetHealth !=null
-
+        if (targetHealth == null)
         {
-            targetHealth.TakeDamage(damageAmount);
-            Debug.Log(gameObject.name + “dealt damage to “ + objectHir.name);
+            return;
         }
+        if (isInstantKill)
+        {
+            Death deathCompnent = objectHit.GetComponent<Death>();
+            if (deathComponent != null)
+            {
+
+            Debug.Log(gameObject.name + “ instantly killed “ + objectHit.name);
+            deathComponent.Die();
+        }
+        return;
     }
+    targetHealth.TakeDamage(damageAmount);
 }
+}
+
