@@ -2,7 +2,12 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    // This attribute makes the variable show up in your Unity Inspector window
+    [Header("Custom Input Settings")]
+    public KeyCode moveForward;    // Will show up as a dropdown in Inspector
+    public KeyCode moveBackward;   // Will show up as a dropdown in Inspector
+    public KeyCode strafeLeft;     // Will show up as a dropdown in Inspector
+    public KeyCode strafeRight;    // Will show up as a dropdown in Inspector
+
     [Header("Movement Settings")]
     public float moveSpeed = 5.0f;
 
@@ -11,22 +16,36 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        // Get the Rigidbody2D component attached to the spaceship
         rb = GetComponent<Rigidbody2D>();
     }
 
     void Update()
     {
-        // 1. READ INPUTS (Forward, Backward, Side-to-Side)
-        // GetAxisRaw reads W/S/Up/Down for Vertical and A/D/Left/Right for Horizontal
-        movementInput.x = Input.GetAxisRaw("Horizontal"); // Side-to-side (Strafing)
-        movementInput.y = Input.GetAxisRaw("Vertical");   // Forward/Backward
+        // Reset inputs every frame
+        movementInput = Vector2.zero;
+
+        // 1. READ INDIVIDUAL KEYCODES
+        if (Input.GetKey(moveForward))
+        {
+            movementInput.y = 1; // Move Up / Forward
+        }
+        if (Input.GetKey(moveBackward))
+        {
+            movementInput.y = -1; // Move Down / Backward
+        }
+        if (Input.GetKey(strafeLeft))
+        {
+            movementInput.x = -1; // Move Left / Strafe Left
+        }
+        if (Input.GetKey(strafeRight))
+        {
+            movementInput.x = 1; // Move Right / Strafe Right
+        }
     }
 
     void FixedUpdate()
     {
-        // 2. MOVE THE SHIP USING PHYSICS
-        // This moves the Rigidbody smoothly based on your inputs and move speed
+        // 2. MOVE THE SHIP WITH PHYSICS
         rb.linearVelocity = movementInput.normalized * moveSpeed;
     }
 }
