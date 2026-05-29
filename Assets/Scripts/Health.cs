@@ -5,33 +5,37 @@ public class Health : MonoBehaviour
     public int maxHealth = 100;
     public int currentHealth = 100;
 
+    // ADDED: Checkbox in the inspector to tell the GameManager if this is the player or an obstacle
+    [Header("Game Manager Tracking")]
+    public bool isPlayer = false;
+
     private void Start()
     {
         currentHealth = maxHealth;
+
+        // ADDED: If this object is an obstacle, it automatically adds itself to the GameManager's list when the game starts
+        if (!isPlayer && GameManager.Instance != null)
+        {
+            GameManager.Instance.RegisterObstacle(this);
+        }
     }
 
-    // Call this function to take damage and reduce health 
     public void TakeDamage(int damageAmount)
     {
         currentHealth -= damageAmount;
         Debug.Log(gameObject.name + " took damage! Current Health: " + currentHealth);
 
-        // FIXED: The spaceship will now ONLY die if health is 0 or less
         if (currentHealth <= 0)
         {
-            // Get the Death component on this GameObject 
             Death deathComponent = GetComponent<Death>();
-
-            // Check if the Death component exists 
             if (deathComponent != null)
             {
-                // Tell it to die
-                deathComponent.Die();
+                // UPDATED: Pass 'isPlayer' and 'this' to the Die method so the death system knows who died
+                deathComponent.Die(isPlayer, this);
             }
         }
     }
 
-    // ADDED: Call this from your Death script to heal back to full
     public void ResetHealth()
     {
         currentHealth = maxHealth;
