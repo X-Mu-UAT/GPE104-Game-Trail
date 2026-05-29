@@ -2,24 +2,35 @@ using UnityEngine;
 
 public class ShipController : MonoBehaviour
 {
-    // Always remember variables go at the very top
     [Header("Possessed Pawn")]
     public ShipMovement possessedShip;
+    private ShooterBullet shipShooter; // Reference to the shooter component
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
-        // Safety check: if you forgot to drag the ship in, do nothing
-        if (possessedShip == null) return;
-        // Run our input checks
-        HandleLocalControls();
-        HandleWorldControls();
+        UpdatePawnReferences();
     }
 
-    // Add these methods so the calls in Update resolve.
+    void Update()
+    {
+        if (possessedShip == null) return;
+
+        HandleLocalControls();
+        HandleWorldControls();
+        HandleFiring();
+    }
+
+    // Automatically grab the shooter component when a ship is linked
+    public void UpdatePawnReferences()
+    {
+        if (possessedShip != null)
+        {
+            shipShooter = possessedShip.GetComponent<ShooterBullet>();
+        }
+    }
+
     public void HandleLocalControls()
     {
-        // Implement local (ship-relative) input handling here.
         float forwardInput = 0f;
         if (Input.GetKey(KeyCode.W)) forwardInput = 1f;
         if (Input.GetKey(KeyCode.S)) forwardInput = -1f;
@@ -28,28 +39,30 @@ public class ShipController : MonoBehaviour
         if (Input.GetKey(KeyCode.A)) turnInput = -1f;
         if (Input.GetKey(KeyCode.D)) turnInput = 1f;
 
-        //Check if left Shift or Right Shift is currenlty being held down
         bool turboActive = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
         possessedShip.MoveLocal(forwardInput, isTurbo: turboActive);
         possessedShip.RotateLocal(turnInput);
     }
 
     public void HandleWorldControls()
     {
-        // Implement world/global input handling here.
         float worldX = 0f;
-        float worldY = 0f;
-        if (Input.GetKeyDown(KeyCode.UpArrow)) worldY = 1f; //Using GetKeyDown instead of GetKey so that it only moves once per key press, not every frame the key is held down.
-        if (Input.GetKeyDown(KeyCode.DownArrow)) worldY = -1f;
-        if (Input.GetKeyDown(KeyCode.LeftArrow)) worldX = -1f;
-        if (Input.GetKeyDown(KeyCode.RightArrow)) worldX = 1f;
+        if (Input.GetKeyDown(KeyCode.UpArrow)) possessedShip.MoveWorld(new Vector2(0, 1));
+        if (Input.GetKeyDown(KeyCode.DownArrow)) possessedShip.MoveWorld(new Vector2(0, -1));
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) possessedShip.MoveWorld(new Vector2(-1, 0));
+        if (Input.GetKeyDown(KeyCode.RightArrow)) possessedShip.MoveWorld(new Vector2(1, 0));
+    }
 
-        if (worldX != 0f || worldY != 0f)
+    // NEW: Handle Firing Input
+    private void HandleFiring()
+    {
+        // Spacebar acts as the Fire Button
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            Vector2 worldDirection = new Vector2(worldX, worldY).normalized;
-            possessedShip.MoveWorld(worldDirection);
+            if (shipShooter != null)
+            {
+                shipShooter.Shoot();
+            }
         }
     }
 }
-
