@@ -7,6 +7,18 @@ public class PlayerController : MonoBehaviour
     public KeyCode moveBackward;   // Will show up as a dropdown in Inspector
     public KeyCode strafeLeft;     // Will show up as a dropdown in Inspector
     public KeyCode strafeRight;    // Will show up as a dropdown in Inspector
+    public KeyCode rotateCounterclockwise;
+    public KeyCode rotateClockwise;
+
+    // World space movement keys
+    public KeyCode moveUp
+    public KeyCode moveDown
+    public KeyCode moveLeft
+    public KeyCode miveRight
+
+    //Quit key
+    public KeyCode quitKey;
+
 
     [Header("Movement Settings")]
     public float moveSpeed = 5.0f;
