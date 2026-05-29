@@ -1,16 +1,11 @@
 using UnityEngine;
 
-public class Shooter : MonoBehaviour
+public abstract class Shooter : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [Header("Shooter Base Settings")]
+    public GameObject projectilePrefab;
+    public float fireRate = 0.5f;
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // Abstract method: must be implemented by child classes (Polymorphism)
+    public abstract void Shoot();
 }
