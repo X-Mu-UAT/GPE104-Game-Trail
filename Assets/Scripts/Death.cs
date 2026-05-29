@@ -4,20 +4,35 @@ using UnityEngine.Events;
 
 public abstract class Death : MonoBehaviour
 {
-    public virtual void Die()
-    {
-        Debug.Log("Entity died. Disabling physics...");
-        
-        // Disable the collider so it stops triggering OnCollisionEnter2D
-        Collider2D myCollider = GetComponent<Collider2D>();
-        if (myCollider != null)
-        {
-            myCollider.enabled = false;
-        }
+    private Vector3 startPosition;
 
-        Destroy(gameObject);
+    // Changed to Awake to guarantee the starting position is saved instantly
+    public virtual void Awake()
+    {
+        startPosition = transform.position;
     }
 
-    private void DisableCharacterMovement() { }
+    public virtual void Die()
+    {
+        Debug.Log("Die function called on: " + gameObject.name);
 
-}
+        // 1. Teleport back to the starting point instead of disappearing 
+        transform.position = startPosition;
+
+        // 2. Reset the physics velocity so it stops moving/falling 
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+
+        // 3. Reset the Health script back to full 
+        Health targetHealth = GetComponent<Health>();
+        if (targetHealth != null)
+        {
+            targetHealth.ResetHealth();
+        }
+    } // Fixed missing closing bracket for Die()
+} // Fixed missing closing bracket for the class
+
