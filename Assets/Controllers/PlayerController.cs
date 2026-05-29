@@ -1,23 +1,32 @@
 using UnityEngine;
 
-public class PlayerController : Controller
+public class PlayerController : MonoBehaviour
 {
-    public KeyCode moveForward;
+    // This attribute makes the variable show up in your Unity Inspector window
+    [Header("Movement Settings")]
+    public float moveSpeed = 5.0f;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    private Rigidbody2D rb;
+    private Vector2 movementInput;
+
     void Start()
     {
-
+        // Get the Rigidbody2D component attached to the spaceship
+        rb = GetComponent<Rigidbody2D>();
     }
 
-    // Update is called once per frame
     void Update()
     {
-
+        // 1. READ INPUTS (Forward, Backward, Side-to-Side)
+        // GetAxisRaw reads W/S/Up/Down for Vertical and A/D/Left/Right for Horizontal
+        movementInput.x = Input.GetAxisRaw("Horizontal"); // Side-to-side (Strafing)
+        movementInput.y = Input.GetAxisRaw("Vertical");   // Forward/Backward
     }
-    public override void MakeDecisions()
 
+    void FixedUpdate()
     {
-        throw new System.NotImplementedException();
+        // 2. MOVE THE SHIP USING PHYSICS
+        // This moves the Rigidbody smoothly based on your inputs and move speed
+        rb.linearVelocity = movementInput.normalized * moveSpeed;
     }
 }
