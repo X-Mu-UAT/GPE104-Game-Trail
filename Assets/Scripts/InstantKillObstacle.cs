@@ -2,15 +2,14 @@ using UnityEngine;
 
 public class InstantKillObstacle : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void OnCollisionEnter2D(Collision2D collision)
     {
+        Health playerHealth = collision.gameObject.GetComponent<Health>();
         
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // If it has a health component and it is marked as the player, instantly kill it
+        if (playerHealth != null && playerHealth.isPlayer)
+        {
+            playerHealth.Die();
+        }
     }
 }
