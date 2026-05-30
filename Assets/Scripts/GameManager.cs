@@ -1,64 +1,102 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement; // Needed to restart the game
 
 public class GameManager : MonoBehaviour
 {
-    // tThe static reference that makes it a singleton
-    public static GameManager Instance {get; private set;}
+    public static GameManager Instance { get; private set; }
 
-    [Header(”Game State”)]
-    public List<Health> obstacles = new List<Health>();
-    peivate bool isGameOver = false
+    [Header("UI Panels")]
+    public GameObject victoryPanel; // Drag your Victory UI panel here 
+    public GameObject defeatPanel; // Drag your Defeat UI panel here 
 
-void Awake()
+    private List<Health> activeObstacles = new List<Health>();
+    private bool isGameOver = false;
+
+    private void Awake()
     {
         if (Instance == null)
-    {
+        {
             Instance = this;
-            DontDestroyOnLoad(GameObject);
         }
         else
         {
-            Destroy(GameObject); // To get rid of duplicates
+            Destroy(gameObject);
         }
+
+        // Hide UI panels at the start of the game 
+        if (victoryPanel != null) victoryPanel.SetActive(false);
+        if (defeatPanel != null) defeatPanel.SetActive(false);
     }
+
     public void RegisterObstacle(Health obstacle)
-  {
-        if (!obstacles.Contains(obstacle))
+    {
+        if (!activeObstacles.Contains(obstacle))
         {
-            obstacles.Add(obstacle);
+            activeObstacles.Add(obstacle);
         }
     }
 
-    // Called when an obstacle dies
     public void UnregisterObstacle(Health obstacle)
     {
-        if (obstacles.Contains(obstacle))
+        if (activeObstacles.Contains(obstacle))
         {
-            obstacles.Remove(obstacle);
+            activeObstacles.Remove(obstacle);
         }
 
-        // Check for Victory condition
-        if (obstacles.Count == 0 && !isGameOver)
+        // VICTORY CONDITION: Check if that was the last asteroid 
+        if (activeObstacles.Count == 0 && !isGameOver)
         {
-            Victory();
-        }
-    }
-
-    public void TargetDestroyed(bool isPlayer)
-    {
-        if (isGameOver) return;
-
-        if (isPlayer)
-        {
-            isGameOver = true;
-            Debug.Log("Failure");
+            TriggerVictory();
         }
     }
 
-    private void Victory()
+    public void TriggerVictory()
     {
         isGameOver = true;
-        Debug.Log("Victory");
+        Debug.Log("VICTORY! All asteroids destroyed!");
+        if (victoryPanel != null) victoryPanel.SetActive(true);
+        Time.timeScale = 0f; // Pauses the game mechanics 
+    }
+
+    public void TriggerDefeat()
+    {
+        isGameOver = true;
+        Debug.Log("DEFEAT! You crashed!");
+        if (defeatPanel != null) defeatPanel.SetActive(true);
+        Time.timeScale = 0f; // Pauses the game mechanics 
+    }
+
+    // Optional: Call this from a "Restart" button on your UI panels 
+    public void RestartGame()
+    {
+        Time.timeScale = 1f; // Unpause physics 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Reload current level 
+    }
+
+    // ==========================================
+    // ADDED COMPATIBILITY FUNCTIONS BELOW HERE
+    // ==========================================
+
+    // Use this version if the other script passes the Health component
+    public void TargetDestroyed(Health targetHealth)
+    {
+        UnregisterObstacle(targetHealth);
+    }
+
+    // Use this version if the other script calls it without any parameters
+    public void TargetDestroyed()
+    {
+        // Fallback victory check in case a script destroys an asteroid directly
+        if (activeObstacles.Count == 0 && !isGameOver)
+        {
+            TriggerVictory();
+        }
+    }
+
+    internal void TargetDestroyed(bool v)
+    {
+        throw new NotImplementedException();
     }
 }

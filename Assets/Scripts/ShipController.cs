@@ -46,7 +46,6 @@ public class ShipController : MonoBehaviour
 
     public void HandleWorldControls()
     {
-        float worldX = 0f;
         if (Input.GetKeyDown(KeyCode.UpArrow)) possessedShip.MoveWorld(new Vector2(0, 1));
         if (Input.GetKeyDown(KeyCode.DownArrow)) possessedShip.MoveWorld(new Vector2(0, -1));
         if (Input.GetKeyDown(KeyCode.LeftArrow)) possessedShip.MoveWorld(new Vector2(-1, 0));

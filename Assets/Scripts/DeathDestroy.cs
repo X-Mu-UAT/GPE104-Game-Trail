@@ -4,7 +4,7 @@ public class DeathDestroy : Death
 {
     public GameObject explosionPrefab;
 
-    public override void Die()
+    public new virtual void Die()
     {
         // FIXED: Added a check to ensure you don't accidentally clone yourself
         if (explosionPrefab != null && explosionPrefab != gameObject)

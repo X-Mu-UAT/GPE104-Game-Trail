@@ -2,14 +2,13 @@ using UnityEngine;
 
 public class InstantKillObstacle : MonoBehaviour
 {
-    void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        Health playerHealth = collision.gameObject.GetComponent<Health>();
-        
-        // If it has a health component and it is marked as the player, instantly kill it
-        if (playerHealth != null && playerHealth.isPlayer)
+        Health targetHealth = other.GetComponent<Health>();
+
+        if (targetHealth != null)
         {
-            playerHealth.Die();
+            targetHealth.TakeDamage(999999);
         }
     }
 }

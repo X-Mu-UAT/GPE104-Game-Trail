@@ -9,7 +9,7 @@ public class DeathMoveToOrgin : Death
         startPosition = transform.position;
     }
 
-    public override void Die()
+    public new virtual void Die()
     {
         
         transform.position = startPosition;

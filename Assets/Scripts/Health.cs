@@ -5,7 +5,6 @@ public class Health : MonoBehaviour
     public int maxHealth = 100;
     public int currentHealth = 100;
 
-    // ADDED: Checkbox in the inspector to tell the GameManager if this is the player or an obstacle
     [Header("Game Manager Tracking")]
     public bool isPlayer = false;
 
@@ -13,7 +12,7 @@ public class Health : MonoBehaviour
     {
         currentHealth = maxHealth;
 
-        // ADDED: If this object is an obstacle, it automatically adds itself to the GameManager's list when the game starts
+        // Register asteroids with the GameManager when they spawn
         if (!isPlayer && GameManager.Instance != null)
         {
             GameManager.Instance.RegisterObstacle(this);
@@ -27,11 +26,39 @@ public class Health : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Death deathComponent = GetComponent<Death>();
-            if (deathComponent != null)
+            // IF IT IS AN ASTEROID/OBSTACLE
+            if (!isPlayer)
             {
-                // UPDATED: Pass 'isPlayer' and 'this' to the Die method so the death system knows who died
-                deathComponent.Die(isPlayer, this);
+                Debug.Log(gameObject.name + " has died and is being destroyed.");
+
+                // FIXED: Tell GameManager this asteroid is gone BEFORE destroying it
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.UnregisterObstacle(this);
+                }
+
+                Destroy(gameObject);
+                return;
+            }
+
+            // IF IT IS THE PLAYER
+            if (isPlayer)
+            {
+                // FIXED: Tell the GameManager to display the Defeat/Game Over UI panel
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.TriggerDefeat();
+                }
+
+                Death deathComponent = GetComponent<Death>();
+                if (deathComponent != null)
+                {
+                    deathComponent.Die(isPlayer, this);
+                }
+                else
+                {
+                    Debug.LogWarning("Player has no Death component attached!");
+                }
             }
         }
     }
