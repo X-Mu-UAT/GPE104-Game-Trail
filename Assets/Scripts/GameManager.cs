@@ -1,18 +1,29 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; // Needed to restart the game
+using UnityEngine.SceneManagement; 
+using TMPro; // Added back to reference the Screen Space Score Text element
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("UI Panels")]
-    public GameObject victoryPanel; // Drag your Victory UI panel here 
-    public GameObject defeatPanel; // Drag your Defeat UI panel here 
+    [Header("Game State UI Objects (Requirement 1 & 3)")]
+    public GameObject TitleScreenStateObject;
+    public GameObject MainMenuStateObject;
+    public GameObject OptionsScreenStateObject;
+    public GameObject CreditsScreenStateObject;
+    public GameObject GameplayStateObject;
+    public GameObject GameOverScreenStateObject;
+    public GameObject VictoryScreenStateObject; 
+
+    [Header("Score System (Requirement 2)")]
+    [SerializeField] private TextMeshProUGUI scoreText; // Drag your Screen Space Score Text here
+    private int currentScore = 0;
 
     private List<Health> activeObstacles = new List<Health>();
     private bool isGameOver = false;
+    private GameObject[] allStateObjects;
 
     private void Awake()
     {
@@ -26,10 +37,110 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // Hide UI panels at the start of the game 
-        if (victoryPanel != null) victoryPanel.SetActive(false);
-        if (defeatPanel != null) defeatPanel.SetActive(false);
+        allStateObjects = new GameObject[]
+        {
+            TitleScreenStateObject,
+            MainMenuStateObject,
+            OptionsScreenStateObject,
+            CreditsScreenStateObject,
+            GameplayStateObject,
+            GameOverScreenStateObject,
+            VictoryScreenStateObject
+        };
     }
+
+    private void Start()
+    {
+        SetGameState("TitleScreen");
+    }
+
+    public void SetGameState(string stateName)
+    {
+        foreach (GameObject stateObject in allStateObjects)
+        {
+            if (stateObject != null) stateObject.SetActive(false);
+        }
+
+        switch (stateName)
+        {
+            case "TitleScreen":
+                TitleScreenStateObject.SetActive(true);
+                Time.timeScale = 0f; 
+                isGameOver = true;
+                break;
+
+            case "MainMenu":
+                MainMenuStateObject.SetActive(true);
+                Time.timeScale = 0f;
+                isGameOver = true;
+                break;
+
+            case "Options":
+                OptionsScreenStateObject.SetActive(true);
+                Time.timeScale = 0f;
+                break;
+
+            case "Credits":
+                CreditsScreenStateObject.SetActive(true);
+                Time.timeScale = 0f;
+                break;
+
+            case "Gameplay":
+                GameplayStateObject.SetActive(true);
+                Time.timeScale = 1f; 
+                isGameOver = false;
+                
+                // Reset Score System when starting gameplay loop
+                currentScore = 0;
+                UpdateScoreUI();
+
+                ClearOldObstaclesOnly(); 
+                break;
+
+            case "GameOver":
+                GameOverScreenStateObject.SetActive(true);
+                Time.timeScale = 0f; 
+                isGameOver = true;
+                break;
+
+            case "Victory":
+                VictoryScreenStateObject.SetActive(true);
+                Time.timeScale = 0f; 
+                isGameOver = true;
+                break;
+        }
+    }
+
+    // --- REQUIREMENT 2: CORE SCORE LOGIC ---
+    public void AddPoints(int pointsToGive)
+    {
+        if (isGameOver) return;
+
+        currentScore += pointsToGive;
+        UpdateScoreUI();
+    }
+
+    private void UpdateScoreUI()
+    {
+        if (scoreText != null)
+        {
+            scoreText.text = $"SCORE: {currentScore:D5}";
+        }
+    }
+
+    private void ClearOldObstaclesOnly()
+    {
+        activeObstacles.Clear();
+        GameObject[] oldAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+        foreach (GameObject asteroid in oldAsteroids)
+        {
+            Destroy(asteroid);
+        }
+    }
+
+    // ==========================================
+    // ASTEROID & DAMAGE TRACKING LOGIC
+    // ==========================================
 
     public void RegisterObstacle(Health obstacle)
     {
@@ -46,58 +157,34 @@ public class GameManager : MonoBehaviour
             activeObstacles.Remove(obstacle);
         }
 
-        // VICTORY CONDITION: Check if that was the last asteroid 
         if (activeObstacles.Count == 0 && !isGameOver)
         {
             TriggerVictory();
         }
     }
 
-    public void TriggerVictory()
-    {
-        isGameOver = true;
-        Debug.Log("VICTORY! All asteroids destroyed!");
-        if (victoryPanel != null) victoryPanel.SetActive(true);
-        Time.timeScale = 0f; // Pauses the game mechanics 
-    }
+    public void TriggerVictory() => SetGameState("Victory");
+    public void TriggerDefeat() => SetGameState("GameOver");
 
-    public void TriggerDefeat()
-    {
-        isGameOver = true;
-        Debug.Log("DEFEAT! You crashed!");
-        if (defeatPanel != null) defeatPanel.SetActive(true);
-        Time.timeScale = 0f; // Pauses the game mechanics 
-    }
-
-    // Optional: Call this from a "Restart" button on your UI panels 
     public void RestartGame()
     {
-        Time.timeScale = 1f; // Unpause physics 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); // Reload current level 
+        Time.timeScale = 1f; 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
     }
 
-    // ==========================================
-    // ADDED COMPATIBILITY FUNCTIONS BELOW HERE
-    // ==========================================
+    public void GoToTitleScreen() => SetGameState("TitleScreen");
+    public void GoToMainMenu() => SetGameState("MainMenu");
+    public void GoToOptions() => SetGameState("Options");
+    public void GoToCredits() => SetGameState("Credits");
+    public void StartNewGame() => SetGameState("Gameplay");
 
-    // Use this version if the other script passes the Health component
     public void TargetDestroyed(Health targetHealth)
     {
         UnregisterObstacle(targetHealth);
     }
 
-    // Use this version if the other script calls it without any parameters
     public void TargetDestroyed()
     {
-        // Fallback victory check in case a script destroys an asteroid directly
-        if (activeObstacles.Count == 0 && !isGameOver)
-        {
-            TriggerVictory();
-        }
-    }
-
-    internal void TargetDestroyed(bool v)
-    {
-        throw new NotImplementedException();
+        if (activeObstacles.Count == 0 && !isGameOver) TriggerVictory();
     }
 }

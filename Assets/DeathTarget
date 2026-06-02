@@ -1,0 +1,31 @@
+using UnityEngine;
+
+public class DeathTarget : MonoBehaviour
+{
+    // DESIGNER-EXPOSED VARIABLE: Set different point values per asteroid in the Inspector
+    [Header("Score Settings")]
+    [SerializeField] private int pointsValue = 100; 
+
+    private Health healthComponent;
+    private bool pointsAwarded = false;
+
+    private void Start()
+    {
+        healthComponent = GetComponent<Health>();
+    }
+
+    private void Update()
+    {
+        // When the asteroid object drops to 0 health, award the points exactly once
+        if (healthComponent != null && healthComponent.currentHealth <= 0 && !pointsAwarded)
+        {
+            pointsAwarded = true;
+            
+            // Score is stored in the GameManager, as required
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.AddPoints(pointsValue);
+            }
+        }
+    }
+}
