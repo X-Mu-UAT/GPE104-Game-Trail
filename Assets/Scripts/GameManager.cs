@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
 
         // Hide UI panels at the start of the game 
