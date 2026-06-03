@@ -1,21 +1,42 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Health : MonoBehaviour
 {
     public int maxHealth = 100;
     public int currentHealth = 100;
 
+    [Header("UI Reference")]
+    [Tooltip("Used for the screen-space Player Slider.")]
+    public Slider healthSlider;
+
+    [Tooltip("Used for floating World-Space enemy health bars. Assign the Fill Image component here.")]
+    public Image healthBarFill; // ADDED: For target health bar stretching
+
     [Header("Game Manager Tracking")]
     public bool isPlayer = false;
 
     [Header("Score Configuration")]
     [Tooltip("How many points the player gets when this object dies.")]
-    [SerializeField] private int scoreValue = 100; // Default to 100 points, change this in Inspector
+    [SerializeField] private int scoreValue = 100;
 
     private void Start()
     {
         currentHealth = maxHealth;
-        // Register asteroids with the GameManager when they spawn
+
+        // Initialize the screen-space player slider
+        if (isPlayer && healthSlider != null)
+        {
+            healthSlider.maxValue = maxHealth;
+            healthSlider.value = maxHealth;
+        }
+
+        // ADDED: Initialize world-space target fill amount to 100%
+        if (!isPlayer && healthBarFill != null)
+        {
+            healthBarFill.fillAmount = 1f;
+        }
+
         if (!isPlayer && GameManager.Instance != null)
         {
             GameManager.Instance.RegisterObstacle(this);
@@ -25,30 +46,40 @@ public class Health : MonoBehaviour
     public void TakeDamage(int damageAmount)
     {
         currentHealth -= damageAmount;
+        // Clamp health so it never drops below zero
+        currentHealth = Mathf.Max(0, currentHealth);
+
         Debug.Log(gameObject.name + " took damage! Current Health: " + currentHealth);
+
+        // Update the slider visual dynamically when the player takes damage 
+        if (isPlayer && healthSlider != null)
+        {
+            healthSlider.value = currentHealth;
+        }
+
+        // ADDED: Update the target's World-Space health bar fill percentage
+        if (!isPlayer && healthBarFill != null)
+        {
+            // Calculates the fraction between 0.0 and 1.0
+            healthBarFill.fillAmount = (float)currentHealth / maxHealth;
+        }
 
         if (currentHealth <= 0)
         {
-            // IF IT IS AN ASTEROID/OBSTACLE
             if (!isPlayer)
             {
                 Debug.Log(gameObject.name + " has died and is being destroyed.");
-
-                // ADDED: Award points to the player before destroying the object
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.AddPoints(scoreValue);
                     GameManager.Instance.UnregisterObstacle(this);
                 }
-
                 Destroy(gameObject);
                 return;
             }
 
-            // IF IT IS THE PLAYER
             if (isPlayer)
             {
-                // FIXED: Tell the GameManager to display the Defeat/Game Over UI panel
                 if (GameManager.Instance != null)
                 {
                     GameManager.Instance.TriggerDefeat();
@@ -70,6 +101,18 @@ public class Health : MonoBehaviour
     public void ResetHealth()
     {
         currentHealth = maxHealth;
+
+        if (isPlayer && healthSlider != null)
+        {
+            healthSlider.value = maxHealth;
+        }
+
+        // ADDED: Reset target bar visual on health reset
+        if (!isPlayer && healthBarFill != null)
+        {
+            healthBarFill.fillAmount = 1f;
+        }
+
         Debug.Log(gameObject.name + " health reset to full!");
     }
 }
