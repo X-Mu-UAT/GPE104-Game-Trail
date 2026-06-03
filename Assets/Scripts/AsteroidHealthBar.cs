@@ -1,0 +1,43 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class AsteroidHealthBar : MonoBehaviour
+{
+    [Header("UI Component")]
+    [SerializeField] private Slider healthSlider;
+
+    [Header("Dependencies")]
+    [SerializeField] private Health asteroidHealth;
+
+    private Transform mainCameraTransform;
+
+    private void Start()
+    {
+        if (Camera.main != null) mainCameraTransform = Camera.main.transform;
+        if (asteroidHealth == null) asteroidHealth = GetComponentInParent<Health>();
+
+        if (healthSlider != null)
+        {
+            // Forces slider to operate strictly between 0% (0) and 100% (1)
+            healthSlider.minValue = 0f;
+            healthSlider.maxValue = 1f;
+        }
+    }
+
+    private void Update()
+    {
+        if (asteroidHealth == null || healthSlider == null) return;
+
+        // CALCULATE PERCENTAGE: (Current / Max) guarantees value is between 0.0 and 1.0
+        float healthPercentage = (float)asteroidHealth.currentHealth / asteroidHealth.maxHealth;
+
+        // This physically changes the width fill of the bar to match the exact percentage
+        healthSlider.value = healthPercentage;
+
+        // Keep the health bar upright while the asteroid spins
+        if (mainCameraTransform != null)
+        {
+            transform.rotation = mainCameraTransform.rotation;
+        }
+    }
+}

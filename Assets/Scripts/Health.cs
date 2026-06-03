@@ -8,10 +8,13 @@ public class Health : MonoBehaviour
     [Header("Game Manager Tracking")]
     public bool isPlayer = false;
 
+    [Header("Score Configuration")]
+    [Tooltip("How many points the player gets when this object dies.")]
+    [SerializeField] private int scoreValue = 100; // Default to 100 points, change this in Inspector
+
     private void Start()
     {
         currentHealth = maxHealth;
-
         // Register asteroids with the GameManager when they spawn
         if (!isPlayer && GameManager.Instance != null)
         {
@@ -31,9 +34,10 @@ public class Health : MonoBehaviour
             {
                 Debug.Log(gameObject.name + " has died and is being destroyed.");
 
-                // FIXED: Tell GameManager this asteroid is gone BEFORE destroying it
+                // ADDED: Award points to the player before destroying the object
                 if (GameManager.Instance != null)
                 {
+                    GameManager.Instance.AddPoints(scoreValue);
                     GameManager.Instance.UnregisterObstacle(this);
                 }
 

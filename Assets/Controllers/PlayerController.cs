@@ -14,29 +14,35 @@ public class PlayerController : MonoBehaviour
     public KeyCode moveDown;
     public KeyCode moveLeft;
     public KeyCode miveRight;
-    public KeyCode shootKey = KeyCode.Space;
+    public KeyCode shootKey = KeyCode.Space; // RESTORED: Keyboard firing key
     public KeyCode quitKey;
 
     [Header("Movement Settings")]
     public float moveSpeed = 5.0f;
-    public float rotationSpeed = 200.0f; // Added speed control for rotation
+    public float rotationSpeed = 200.0f;
 
-    [Header("Shooting Settings")]
-    public GameObject projectilePrefab;
-    public Transform firePoint;
+    // RESTORED: Reference link to your separate weapon script
+    [Header("Weapon Connection")]
+    [Tooltip("Drag the GameObject with your Weapon script here (usually yourself).")]
+    [SerializeField] private Weapon playerWeapon;
 
     private Rigidbody2D rb;
     private Vector2 movementInput;
-    private float rotationInput; // Stores the rotation direction
+    private float rotationInput;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        // Automatically try to find the weapon script on this same object if forgotten
+        if (playerWeapon == null)
+        {
+            playerWeapon = GetComponent<Weapon>();
+        }
     }
 
     void Update()
     {
-        // Reset inputs every frame
         movementInput = Vector2.zero;
         rotationInput = 0f;
 
@@ -50,7 +56,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(rotateCounterclockwise)) { rotationInput = 1f; }
         if (Input.GetKey(rotateClockwise)) { rotationInput = -1f; }
 
-        // 3. CHECK KEYBOARD SHOOTING
+        // 3. RESTORED: CHECK KEYBOARD SHOOTING
         if (Input.GetKeyDown(shootKey))
         {
             ShootProjectile();
@@ -61,17 +67,15 @@ public class PlayerController : MonoBehaviour
         {
             Application.Quit();
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false; // Closes play mode in editor
+            UnityEditor.EditorApplication.isPlaying = false;
 #endif
         }
     }
 
     void FixedUpdate()
     {
-        // 5. MOVE THE SHIP WITH PHYSICS
         rb.linearVelocity = movementInput.normalized * moveSpeed;
 
-        // 6. ROTATE THE SHIP WITH PHYSICS
         if (rotationInput != 0)
         {
             float targetRotation = rb.rotation + (rotationInput * rotationSpeed * Time.fixedDeltaTime);
@@ -79,16 +83,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    // 7. THE FUNCTION FOR YOUR UI BUTTON AND KEYBOARD
+    // 5. RESTORED & OPTIMIZED: The bridge function for keyboard and UI Buttons
     public void ShootProjectile()
     {
-        if (projectilePrefab != null && firePoint != null)
+        if (playerWeapon != null)
         {
-            Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+            // CHANGE THIS: Replace 'Fire()' with the exact name of your Weapon script's shooting method!
+            playerWeapon.Shoot();
         }
         else
         {
-            Debug.LogWarning("Missing Projectile Prefab or Fire Point on PlayerController!");
+            Debug.LogWarning("PlayerController cannot shoot because the Player Weapon script slot is unassigned!");
         }
     }
 }

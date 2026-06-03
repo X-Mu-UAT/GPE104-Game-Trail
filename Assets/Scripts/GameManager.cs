@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; 
-using TMPro; // Added back to reference the Screen Space Score Text element
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,107 +15,99 @@ public class GameManager : MonoBehaviour
     public GameObject CreditsScreenStateObject;
     public GameObject GameplayStateObject;
     public GameObject GameOverScreenStateObject;
-    public GameObject VictoryScreenStateObject; 
+    public GameObject VictoryScreenStateObject;
 
     [Header("Score System (Requirement 2)")]
-    [SerializeField] private TextMeshProUGUI scoreText; // Drag your Screen Space Score Text here
+    [SerializeField] private TextMeshProUGUI scoreText;
     private int currentScore = 0;
-
     private List<Health> activeObstacles = new List<Health>();
     private bool isGameOver = false;
-    private GameObject[] allStateObjects;
 
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        allStateObjects = new GameObject[]
-        {
-            TitleScreenStateObject,
-            MainMenuStateObject,
-            OptionsScreenStateObject,
-            CreditsScreenStateObject,
-            GameplayStateObject,
-            GameOverScreenStateObject,
-            VictoryScreenStateObject
-        };
-    }
+   
 
     private void Start()
     {
-        SetGameState("TitleScreen");
+        SetGameState("Gameplay");
+    }
+
+    // ADDED: Listens for Unity scene switches
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    // ADDED: Cleans up the listener if the manager is destroyed
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    // ADDED: Automatically runs the gameplay layout once the scene loads
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // CHANGE THIS: Replace "YourGameplaySceneName" with your exact scene file name
+        if (scene.name == "Gameplay")
+        {
+            SetGameState("Gameplay");
+        }
     }
 
     public void SetGameState(string stateName)
     {
+        // 1. Safely disable all screens dynamically to avoid NullReferenceExceptions
+        GameObject[] allStateObjects = new GameObject[] { TitleScreenStateObject, MainMenuStateObject, OptionsScreenStateObject, CreditsScreenStateObject, GameplayStateObject, GameOverScreenStateObject, VictoryScreenStateObject };
         foreach (GameObject stateObject in allStateObjects)
         {
-            if (stateObject != null) stateObject.SetActive(false);
+            if (stateObject != null)
+                stateObject.SetActive(false);
         }
 
+        // 2. Handle the new state setup
         switch (stateName)
         {
             case "TitleScreen":
-                TitleScreenStateObject.SetActive(true);
-                Time.timeScale = 0f; 
+                if (TitleScreenStateObject != null) TitleScreenStateObject.SetActive(true);
+                Time.timeScale = 0f;
                 isGameOver = true;
                 break;
-
             case "MainMenu":
-                MainMenuStateObject.SetActive(true);
+                if (MainMenuStateObject != null) MainMenuStateObject.SetActive(true);
                 Time.timeScale = 0f;
                 isGameOver = true;
                 break;
-
             case "Options":
-                OptionsScreenStateObject.SetActive(true);
+                if (OptionsScreenStateObject != null) OptionsScreenStateObject.SetActive(true);
                 Time.timeScale = 0f;
                 break;
-
             case "Credits":
-                CreditsScreenStateObject.SetActive(true);
+                if (CreditsScreenStateObject != null) CreditsScreenStateObject.SetActive(true);
                 Time.timeScale = 0f;
                 break;
-
             case "Gameplay":
-                GameplayStateObject.SetActive(true);
-                Time.timeScale = 1f; 
+                if (GameplayStateObject != null) GameplayStateObject.SetActive(true);
+                // CRITICAL: Set timeScale to 1 FIRST so Unity physics and UI can process updates
+                Time.timeScale = 1f;
                 isGameOver = false;
-                
-                // Reset Score System when starting gameplay loop
                 currentScore = 0;
                 UpdateScoreUI();
-
-                ClearOldObstaclesOnly(); 
+                ClearOldObstaclesOnly();
                 break;
-
             case "GameOver":
-                GameOverScreenStateObject.SetActive(true);
-                Time.timeScale = 0f; 
+                if (GameOverScreenStateObject != null) GameOverScreenStateObject.SetActive(true);
+                Time.timeScale = 0f;
                 isGameOver = true;
                 break;
-
             case "Victory":
-                VictoryScreenStateObject.SetActive(true);
-                Time.timeScale = 0f; 
+                if (VictoryScreenStateObject != null) VictoryScreenStateObject.SetActive(true);
+                Time.timeScale = 0f;
                 isGameOver = true;
                 break;
         }
     }
 
-    // --- REQUIREMENT 2: CORE SCORE LOGIC ---
     public void AddPoints(int pointsToGive)
     {
         if (isGameOver) return;
-
         currentScore += pointsToGive;
         UpdateScoreUI();
     }
@@ -131,16 +123,25 @@ public class GameManager : MonoBehaviour
     private void ClearOldObstaclesOnly()
     {
         activeObstacles.Clear();
-        GameObject[] oldAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
-        foreach (GameObject asteroid in oldAsteroids)
-        {
-            Destroy(asteroid);
-        }
-    }
 
-    // ==========================================
-    // ASTEROID & DAMAGE TRACKING LOGIC
-    // ==========================================
+        // 1. Find all asteroids physically placed in the scene
+        GameObject[] existingAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+
+        // 2. Loop through them and manually force them into the tracking list right now
+        foreach (GameObject asteroid in existingAsteroids)
+        {
+            Health asteroidHealth = asteroid.GetComponent<Health>();
+            if (asteroidHealth != null)
+            {
+                if (!activeObstacles.Contains(asteroidHealth))
+                {
+                    activeObstacles.Add(asteroidHealth);
+                }
+            }
+        }
+
+        Debug.Log($"Gameplay started! Tracking {activeObstacles.Count} hand-placed asteroids.");
+    }
 
     public void RegisterObstacle(Health obstacle)
     {
@@ -157,6 +158,7 @@ public class GameManager : MonoBehaviour
             activeObstacles.Remove(obstacle);
         }
 
+        // Safeguard: Only win if the game is active AND we actually had obstacles to clear
         if (activeObstacles.Count == 0 && !isGameOver)
         {
             TriggerVictory();
@@ -168,15 +170,29 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        Time.timeScale = 1f; 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); 
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void GoToTitleScreen() => SetGameState("TitleScreen");
     public void GoToMainMenu() => SetGameState("MainMenu");
     public void GoToOptions() => SetGameState("Options");
     public void GoToCredits() => SetGameState("Credits");
-    public void StartNewGame() => SetGameState("Gameplay");
+
+    // UPDATED: Clear out references before switching scenes
+    public void StartNewGame()
+    {
+        Time.timeScale = 1f;
+
+        // Disconnect the Menu references so GameManager stops trying to control them
+        TitleScreenStateObject = null;
+        MainMenuStateObject = null;
+        OptionsScreenStateObject = null;
+        CreditsScreenStateObject = null;
+
+        // Load the new scene
+        SceneManager.LoadScene("Gameplay");
+    }
 
     public void TargetDestroyed(Health targetHealth)
     {
