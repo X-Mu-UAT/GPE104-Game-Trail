@@ -9,9 +9,8 @@ public class Health : MonoBehaviour
     [Header("UI Reference")]
     [Tooltip("Used for the screen-space Player Slider.")]
     public Slider healthSlider;
-
     [Tooltip("Used for floating World-Space enemy health bars. Assign the Fill Image component here.")]
-    public Image healthBarFill; // ADDED: For target health bar stretching
+    public Image healthBarFill;
 
     [Header("Game Manager Tracking")]
     public bool isPlayer = false;
@@ -31,7 +30,8 @@ public class Health : MonoBehaviour
             healthSlider.value = maxHealth;
         }
 
-        // ADDED: Initialize world-space target fill amount to 100%
+        // Initialize world-space target fill amount to 100%
+
         if (!isPlayer && healthBarFill != null)
         {
             healthBarFill.fillAmount = 1f;
@@ -48,16 +48,23 @@ public class Health : MonoBehaviour
         currentHealth -= damageAmount;
         // Clamp health so it never drops below zero
         currentHealth = Mathf.Max(0, currentHealth);
-
         Debug.Log(gameObject.name + " took damage! Current Health: " + currentHealth);
 
-        // Update the slider visual dynamically when the player takes damage 
+        // ADDED: Play the damage sound effect from the GameManager configurations
+        if (GameManager.Instance != null && GameManager.Instance.targetTakeDamageClip != null)
+        {
+            GameManager.Instance.PlaySoundEffect(GameManager.Instance.targetTakeDamageClip, transform.position);
+
+        }
+
+        // Update the slider visual dynamically when the player takes damage
         if (isPlayer && healthSlider != null)
         {
             healthSlider.value = currentHealth;
         }
 
-        // ADDED: Update the target's World-Space health bar fill percentage
+        // Update the target's World-Space health bar fill percentage
+
         if (!isPlayer && healthBarFill != null)
         {
             // Calculates the fraction between 0.0 and 1.0
@@ -101,18 +108,9 @@ public class Health : MonoBehaviour
     public void ResetHealth()
     {
         currentHealth = maxHealth;
-
         if (isPlayer && healthSlider != null)
         {
             healthSlider.value = maxHealth;
         }
 
-        // ADDED: Reset target bar visual on health reset
-        if (!isPlayer && healthBarFill != null)
-        {
-            healthBarFill.fillAmount = 1f;
-        }
-
-        Debug.Log(gameObject.name + " health reset to full!");
-    }
-}
+        // Reset target bar visual on health reset
