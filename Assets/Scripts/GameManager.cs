@@ -21,6 +21,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI scoreText;
     private int currentScore = 0;
 
+    [Header("Audio Configuration (Exposed to Designers)")]
+    public AudioClip backgroundMusicClip;
+    public AudioClip playerShootClip;
+    public AudioClip targetTakeDamageClip;
+
+    private AudioSource musicAudioSource;
+
     private List<Health> activeObstacles = new List<Health>();
     private bool isGameOver = false;
 
@@ -29,6 +36,8 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
+            SetupBackgroundMusic(); // ADDED: Configures background audio automatically
+
         }
         else
         {
@@ -42,136 +51,27 @@ public class GameManager : MonoBehaviour
         SetGameState("MainMenu");
     }
 
-    public void SetGameState(string stateName)
+    // ADDED: Builds a loop audio channel for background tracking
+    private void SetupBackgroundMusic()
     {
-        // 1. Safely disable all screens dynamically to avoid NullReferenceExceptions
-        GameObject[] allStateObjects = new GameObject[] { TitleScreenStateObject, MainMenuStateObject, OptionsScreenStateObject, CreditsScreenStateObject, GameplayStateObject, GameOverScreenStateObject, VictoryScreenStateObject };
-        foreach (GameObject stateObject in allStateObjects)
+        musicAudioSource = gameObject.AddComponent<AudioSource>();
+        musicAudioSource.clip = backgroundMusicClip;
+        musicAudioSource.loop = true;
+        musicAudioSource.playOnAwake = true;
+        musicAudioSource.volume = 0.4f; // Safe background level
+       
+        // Tells it to bypass standard pause loops if needed
+        musicAudioSource.ignoreListenerPause = true;
+       
+        if (backgroundMusicClip != null)
         {
-            if (stateObject != null) stateObject.SetActive(false);
-        }
-
-        // 2. Handle the new state setup
-        switch (stateName)
-        {
-            case "TitleScreen":
-                if (TitleScreenStateObject != null) TitleScreenStateObject.SetActive(true);
-                Time.timeScale = 0f;
-                isGameOver = true;
-                break;
-            case "MainMenu":
-                if (MainMenuStateObject != null) MainMenuStateObject.SetActive(true);
-                Time.timeScale = 0f; // Pauses gameplay physics behind the menu
-                isGameOver = true;
-                break;
-            case "Options":
-                if (OptionsScreenStateObject != null) OptionsScreenStateObject.SetActive(true);
-                Time.timeScale = 0f;
-                break;
-            case "Credits":
-                if (CreditsScreenStateObject != null) CreditsScreenStateObject.SetActive(true);
-                Time.timeScale = 0f;
-                break;
-            case "Gameplay":
-                if (GameplayStateObject != null) GameplayStateObject.SetActive(true);
-                // Unpauses Unity physics and updates the gameplay HUD
-                Time.timeScale = 1f;
-                isGameOver = false;
-                currentScore = 0;
-                UpdateScoreUI();
-                ClearOldObstaclesOnly();
-                break;
-            case "GameOver":
-                if (GameOverScreenStateObject != null) GameOverScreenStateObject.SetActive(true);
-                Time.timeScale = 0f;
-                isGameOver = true;
-                break;
-            case "Victory":
-                if (VictoryScreenStateObject != null) VictoryScreenStateObject.SetActive(true);
-                Time.timeScale = 0f;
-                isGameOver = true;
-                break;
+            musicAudioSource.Play();
         }
     }
 
-    public void AddPoints(int pointsToGive)
+    // ADDED: Universal helper so any weapon or damage zone can trigger a clip instantly
+    public void PlaySoundEffect(AudioClip clip, Vector3 position)
     {
-        if (isGameOver) return;
-        currentScore += pointsToGive;
-        UpdateScoreUI();
-    }
-
-    private void UpdateScoreUI()
-    {
-        if (scoreText != null)
+        if (clip != null)
         {
-            scoreText.text = $"SCORE: {currentScore:D5}";
-        }
-    }
-
-    private void ClearOldObstaclesOnly()
-    {
-        activeObstacles.Clear();
-        GameObject[] existingAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
-        foreach (GameObject asteroid in existingAsteroids)
-        {
-            Health asteroidHealth = asteroid.GetComponent<Health>();
-            if (asteroidHealth != null && !activeObstacles.Contains(asteroidHealth))
-            {
-                activeObstacles.Add(asteroidHealth);
-            }
-        }
-        Debug.Log($"Gameplay started! Tracking {activeObstacles.Count} hand-placed asteroids.");
-    }
-
-    public void RegisterObstacle(Health obstacle)
-    {
-        if (!activeObstacles.Contains(obstacle))
-        {
-            activeObstacles.Add(obstacle);
-        }
-    }
-
-    public void UnregisterObstacle(Health obstacle)
-    {
-        if (activeObstacles.Contains(obstacle))
-        {
-            activeObstacles.Remove(obstacle);
-        }
-        if (activeObstacles.Count == 0 && !isGameOver)
-        {
-            TriggerVictory();
-        }
-    }
-
-    public void TriggerVictory() => SetGameState("Victory");
-    public void TriggerDefeat() => SetGameState("GameOver");
-
-    // FIXED: Instead of loading an asset name, it just reloads your current active scene layout
-    public void RestartGame()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-    }
-
-    public void GoToTitleScreen() => SetGameState("TitleScreen");
-    public void GoToMainMenu() => SetGameState("MainMenu");
-    public void GoToOptions() => SetGameState("Options");
-    public void GoToCredits() => SetGameState("Credits");
-
-    // FIXED: Changes state entirely within the single scene frame layout
-    public void StartNewGame()
-    {
-        SetGameState("Gameplay");
-    }
-
-    public void TargetDestroyed(Health targetHealth)
-    {
-        UnregisterObstacle(targetHealth);
-    }
-
-    public void TargetDestroyed()
-    {
-        if (activeObstacles.Count == 0 && !isGameOver) TriggerVictory();
-    }
-}
+            AudioSource.PlayClipAtPoint(clip, position);
