@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Health : MonoBehaviour
+public class Health : MonoBehaviour, IHealth
 {
     public int maxHealth = 100;
     public int currentHealth = 100;
@@ -108,9 +108,28 @@ public class Health : MonoBehaviour
     public void ResetHealth()
     {
         currentHealth = maxHealth;
-        if (isPlayer && healthSlider != null)
-        {
-            healthSlider.value = maxHealth;
-        }
 
-        // Reset target bar visual on health reset
+        if (isPlayer)
+        {
+            if (healthSlider != null)
+            {
+                healthSlider.value = maxHealth;
+            }
+            else
+            {
+                Debug.LogWarning("Player health slider is null when resetting health.");
+            }
+        }
+        else
+        {
+            if (healthBarFill != null)
+            {
+                healthBarFill.fillAmount = 1f;
+            }
+            else
+            {
+                Debug.LogWarning(gameObject.name + " healthBarFill is null when resetting health.");
+            }
+        }
+    }
+}

@@ -61,6 +61,11 @@ public class ShipController : MonoBehaviour
             if (shipShooter != null)
             {
                 shipShooter.Shoot();
+
+                if (GameManager.Instance != null && GameManager.Instance.playerShootClip != null)
+                {
+                    GameManager.Instance.PlaySoundEffect(GameManager.Instance.playerShootClip, possessedShip.transform.position);
+                }
             }
         }
     }
