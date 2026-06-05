@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using TMPro;
+
 
 public class GameManager : MonoBehaviour
 {
@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            SetupBackgroundMusic(); // Configures background audio automatically
+            SetupBackgroundMusic();
         }
         else
         {
@@ -45,29 +45,29 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Launches straight into the Main Menu layout inside your scene
+        // Automatically load configuration data when the manager initializes
+        LoadGameSettings();
         SetGameState("MainMenu");
     }
 
-    // Builds a loop audio channel for background tracking
     private void SetupBackgroundMusic()
     {
         musicAudioSource = gameObject.AddComponent<AudioSource>();
         musicAudioSource.clip = backgroundMusicClip;
         musicAudioSource.loop = true;
         musicAudioSource.playOnAwake = true;
-        musicAudioSource.volume = 0.1f; // Safe background level
 
-        // Tells it to bypass standard pause loops if needed
+        // Grab saved music volume profile first, fall back to 0.1f if empty
+        float savedMusicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.1f);
+        musicAudioSource.volume = savedMusicVolume;
+
         musicAudioSource.ignoreListenerPause = true;
-
         if (backgroundMusicClip != null)
         {
             musicAudioSource.Play();
         }
     }
 
-    // Universal helper so any weapon or damage zone can trigger a clip instantly
     public void PlaySoundEffect(AudioClip clip, Vector3 position)
     {
         if (clip != null)
@@ -78,9 +78,9 @@ public class GameManager : MonoBehaviour
 
     public void SetGameState(string stateName)
     {
-        // 1. Safely disable all screens dynamically to avoid NullReferenceExceptions
-        GameObject[] allStateObjects = new GameObject[]
-        {
+        Debug.Log($"[GameManager] Switching state to: {stateName}");
+
+        GameObject[] allStateObjects = new GameObject[] {
             TitleScreenStateObject, MainMenuStateObject, OptionsScreenStateObject,
             CreditsScreenStateObject, GameplayStateObject, GameOverScreenStateObject, VictoryScreenStateObject
         };
@@ -90,7 +90,6 @@ public class GameManager : MonoBehaviour
             if (stateObject != null) stateObject.SetActive(false);
         }
 
-        // 2. Handle the new state setup
         switch (stateName)
         {
             case "TitleScreen":
@@ -100,7 +99,7 @@ public class GameManager : MonoBehaviour
                 break;
             case "MainMenu":
                 if (MainMenuStateObject != null) MainMenuStateObject.SetActive(true);
-                Time.timeScale = 0f; // Pauses gameplay physics behind the menu
+                Time.timeScale = 0f;
                 isGameOver = true;
                 break;
             case "Options":
@@ -113,7 +112,6 @@ public class GameManager : MonoBehaviour
                 break;
             case "Gameplay":
                 if (GameplayStateObject != null) GameplayStateObject.SetActive(true);
-                // Unpauses Unity physics and updates the gameplay HUD
                 Time.timeScale = 1f;
                 isGameOver = false;
                 currentScore = 0;
@@ -152,6 +150,7 @@ public class GameManager : MonoBehaviour
     {
         activeObstacles.Clear();
         GameObject[] existingAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
+
         foreach (GameObject asteroid in existingAsteroids)
         {
             Health asteroidHealth = asteroid.GetComponent<Health>();
@@ -160,7 +159,9 @@ public class GameManager : MonoBehaviour
                 activeObstacles.Add(asteroidHealth);
             }
         }
-        Debug.Log($"Gameplay started! Tracking {activeObstacles.Count} hand-placed asteroids.");
+
+        Debug.Log($"[GameManager] Gameplay started! Tracking {activeObstacles.Count} asteroids.");
+        CheckVictoryCondition();
     }
 
     public void RegisterObstacle(Health obstacle)
@@ -168,6 +169,7 @@ public class GameManager : MonoBehaviour
         if (!activeObstacles.Contains(obstacle))
         {
             activeObstacles.Add(obstacle);
+            Debug.Log($"[GameManager] Dynamically registered asteroid. Total remaining: {activeObstacles.Count}");
         }
     }
 
@@ -176,10 +178,18 @@ public class GameManager : MonoBehaviour
         if (activeObstacles.Contains(obstacle))
         {
             activeObstacles.Remove(obstacle);
+            Debug.Log($"[GameManager] Removed asteroid. Remaining count: {activeObstacles.Count}");
         }
+        CheckVictoryCondition();
+    }
+
+    private void CheckVictoryCondition()
+    {
+        Debug.Log($"[GameManager] Checking Victory -> Obstacles remaining: {activeObstacles.Count}, isGameOver variable: {isGameOver}");
 
         if (activeObstacles.Count == 0 && !isGameOver)
         {
+            Debug.Log("[GameManager] Victory conditions met! Triggering Victory Screen.");
             TriggerVictory();
         }
     }
@@ -187,7 +197,6 @@ public class GameManager : MonoBehaviour
     public void TriggerVictory() => SetGameState("Victory");
     public void TriggerDefeat() => SetGameState("GameOver");
 
-    // FIXED: Instead of loading an asset name, it just reloads your current active scene layout
     public void RestartGame()
     {
         Time.timeScale = 1f;
@@ -198,12 +207,7 @@ public class GameManager : MonoBehaviour
     public void GoToMainMenu() => SetGameState("MainMenu");
     public void GoToOptions() => SetGameState("Options");
     public void GoToCredits() => SetGameState("Credits");
-
-    // FIXED: Changes state entirely within the single scene frame layout
-    public void StartNewGame()
-    {
-        SetGameState("Gameplay");
-    }
+    public void StartNewGame() => SetGameState("Gameplay");
 
     public void TargetDestroyed(Health targetHealth)
     {
@@ -212,6 +216,42 @@ public class GameManager : MonoBehaviour
 
     public void TargetDestroyed()
     {
-        if (activeObstacles.Count == 0 && !isGameOver) TriggerVictory();
+        CheckVictoryCondition();
+    }
+
+    // ==========================================
+    // PERSISTENT PLAYER DATA MANAGEMENT SYSTEM
+    // ==========================================
+
+    public void LoadGameSettings()
+    {
+        float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.1f);
+        float sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 0.8f);
+        int highscore = PlayerPrefs.GetInt("HighScore", 0);
+
+        // Apply background track level immediately if instance channel is alive
+        if (musicAudioSource != null)
+        {
+            musicAudioSource.volume = musicVolume;
+        }
+
+        Debug.Log($"[Settings] Loaded Profiles -> Music Vol: {musicVolume}, SFX Vol: {sfxVolume}, Legacy Highscore: {highscore}");
+    }
+
+    // Connect this to your UI script handlers inside your Options Menu Layout
+    public void UpdateAndSaveVolume(float newMusicVolume, float newSFXVolume)
+    {
+        PlayerPrefs.SetFloat("MusicVolume", newMusicVolume);
+        PlayerPrefs.SetFloat("SFXVolume", newSFXVolume);
+
+        // Write instantly to data registry storage frame
+        PlayerPrefs.Save();
+
+        if (musicAudioSource != null)
+        {
+            musicAudioSource.volume = newMusicVolume;
+        }
+
+        Debug.Log("[Settings] Profile files successfully modified on machine.");
     }
 }

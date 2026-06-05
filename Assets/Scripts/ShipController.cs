@@ -55,7 +55,7 @@ public class ShipController : MonoBehaviour
     // NEW: Handle Firing Input
     private void HandleFiring()
     {
-        // Spacebar acts as the Fire Button
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (shipShooter != null)
