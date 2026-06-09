@@ -1,0 +1,87 @@
+using UnityEngine;
+
+/// <summary>
+/// Handles the initial runtime population of the game world.
+/// Distributes enemies randomly and calculates percentage-based variant scaling.
+/// </summary>
+public class EnemySpawner : MonoBehaviour
+{
+    [Header("Spawn Layout Prefabs")]
+    [Tooltip("The Large Asteroid prefab asset.")]
+    [SerializeField] private GameObject largeAsteroidPrefab;
+
+    [Tooltip("The UFO prefab asset.")]
+    [SerializeField] private GameObject ufoPrefab;
+
+    [Header("Spawn Density Controls (Exposed to Designers)")]
+    [Tooltip("Total count of core enemy entities to generate when the match begins.")]
+    [SerializeField] private int totalEnemiesToSpawn = 5;
+
+    [Tooltip("Percentage probability (0 to 100) that a generated enemy will be a UFO instead of an Asteroid.")]
+    [Range(0f, 100f)]
+    [SerializeField] private float ufoSpawnChancePercentage = 30f;
+
+    [Header("Safety Clear Zones")]
+    [Tooltip("Minimum distance from the world origin (player spawn) where an enemy can appear, preventing instant deaths.")]
+    [SerializeField] private float safeRadiusFromCenter = 3f;
+
+    private void Start()
+    {
+        // Execute the allocation grid sequence once the map initializes
+        SpawnInitialEnemyWave();
+    }
+
+    /// <summary>
+    /// Distributes randomized enemy variants across designer bounds.
+    /// </summary>
+    private void SpawnInitialEnemyWave()
+    {
+        if (largeAsteroidPrefab == null || ufoPrefab == null)
+        {
+            Debug.LogError("[EnemySpawner] Missing prefab references! Please assign your enemy assets in the inspector.");
+            return;
+        }
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("[EnemySpawner] Cannot spawn wave because GameManager.Instance is missing!");
+            return;
+        }
+
+        for (int i = 0; i ();
+            if (enemyComponent != null)
+            {
+                GameManager.Instance.RegisterObstacle(enemyComponent);
+            }
+            else
+            {
+                Debug.LogWarning($"[EnemySpawner] Spawned {chosenPrefab.name} is missing a script inheriting from the 'Enemy' class!");
+            }
+        }
+
+        Debug.Log($"[EnemySpawner] Successfully populated wave. Initialized {totalEnemiesToSpawn} total enemy targets.");
+    }
+
+    /// <summary>
+    /// Generates randomized coordinates within the GameManager boundaries while validating center safety rules.
+    /// </summary>
+    private Vector3 GetSafeRandomSpawnPosition()
+    {
+        Vector3 randomPosition = Vector3.zero;
+        int maxAttempts = 20; // Prevents an infinite loop if space boundaries are exceptionally small
+        int attempts = 0;
+
+        do
+        {
+            if (GameManager.Instance != null)
+            {
+                randomPosition = GameManager.Instance.GetRandomBoundaryPosition();
+            }
+            attempts++;
+        } 
+        // Re-roll if the coordinate lands inside the player's starting center safety zone
+        while (Vector3.Distance(randomPosition, Vector3.zero) < safeRadiusFromCenter && attempts < maxAttempts);
+
+        return randomPosition;
+    }
+}
