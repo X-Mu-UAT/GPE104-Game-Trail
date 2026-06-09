@@ -1,0 +1,13 @@
+using UnityEngine
+[System.Serializable]
+public struct GameBoundary
+{
+    [Tooltip("Minimum X coordinate of the screen map boundary.")]
+    public float minX;
+    [Tooltip("Maximum X coordinate of the screen map boundary.")]
+    public float maxX;
+    [Tooltip("Minimum Y coordinate of the screen map boundary.")]
+    public float minY;
+    [Tooltip("Maximum Y coordinate of the screen map boundary.")]
+    public float maxY;
+}
