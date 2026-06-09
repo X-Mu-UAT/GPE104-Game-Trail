@@ -1,99 +1,132 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody2D))] // Automatically adds Rigidbody2D if missing
+/// <summary>
+/// Monitors keyboard input patterns and issues commands to an assigned spaceship Pawn.
+/// Uses vector calculations instead of physics components per course guidelines.
+/// </summary>
 public class PlayerController : MonoBehaviour
 {
-    [Header("Custom Input Settings")]
-    public KeyCode moveForward;
-    public KeyCode moveBackward;
-    public KeyCode strafeLeft;
-    public KeyCode strafeRight;
-    public KeyCode rotateCounterclockwise;
-    public KeyCode rotateClockwise;
-    public KeyCode moveUp;
-    public KeyCode moveDown;
-    public KeyCode moveLeft;
-    public KeyCode miveRight;
-    public KeyCode shootKey = KeyCode.Space; // RESTORED: Keyboard firing key
-    public KeyCode quitKey;
+    [Header("Pawn Connection Assignment")]
+    [Tooltip("Drag the GameObject containing your SpaceShipPawn component into this field.")]
+    [SerializeField] private Pawn targetPawn;
 
-    [Header("Movement Settings")]
-    public float moveSpeed = 5.0f;
-    public float rotationSpeed = 200.0f;
+    [Header("Continuous Input Key Mappings (WASD)")]
+    public KeyCode moveForward = KeyCode.W;
+    public KeyCode moveBackward = KeyCode.S;
+    public KeyCode rotateCounterClockwise = KeyCode.A;
+    public KeyCode rotateClockwise = KeyCode.D;
 
-    // RESTORED: Reference link to your separate weapon script
-    [Header("Weapon Connection")]
-    [Tooltip("Drag the GameObject with your Weapon script here (usually yourself).")]
-    [SerializeField] private Weapon playerWeapon;
+    [Header("Discrete Teleport Jumps (Arrow Keys & T)")]
+    public KeyCode teleportUp = KeyCode.UpArrow;
+    public KeyCode teleportDown = KeyCode.DownArrow;
+    public KeyCode teleportLeft = KeyCode.LeftArrow;
+    public KeyCode teleportRight = KeyCode.RightArrow;
+    public KeyCode randomTeleportKey = KeyCode.T;
 
-    private Rigidbody2D rb;
-    private Vector2 movementInput;
-    private float rotationInput;
+    [Header("Designer Specified Teleport Matrix")]
+    [Tooltip("Distance traveled instantly in world space when clicking an arrow key.")]
+    [SerializeField] private float teleportDistance = 3.0f;
 
-    void Start()
+    [Header("Action Key Mappings")]
+    public KeyCode shootKey = KeyCode.Space;
+    public KeyCode quitKey = KeyCode.Escape;
+
+    private void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-
-        // Automatically try to find the weapon script on this same object if forgotten
-        if (playerWeapon == null)
+        // Automatically check local hierarchy elements if left blank in inspector
+        if (targetPawn == null)
         {
-            playerWeapon = GetComponent<Weapon>();
+            targetPawn = GetComponent<Pawn>();
+        }
+
+        if (targetPawn == null)
+        {
+            Debug.LogError("[PlayerController] Critical assignment error: No Target Pawn linked!");
         }
     }
 
-    void Update()
+    private void Update()
     {
-        movementInput = Vector2.zero;
-        rotationInput = 0f;
+        if (targetPawn == null) return;
 
-        // 1. READ MOVEMENT KEYCODES
-        if (Input.GetKey(moveForward)) { movementInput.y = 1; }
-        if (Input.GetKey(moveBackward)) { movementInput.y = -1; }
-        if (Input.GetKey(strafeLeft)) { movementInput.x = -1; }
-        if (Input.GetKey(strafeRight)) { movementInput.x = 1; }
+        HandleContinuousMovementInput();
+        HandleDiscreteTeleportInput();
+        HandleActionInputKeys();
+    }
 
-        // 2. READ ROTATION KEYCODES
-        if (Input.GetKey(rotateCounterclockwise)) { rotationInput = 1f; }
-        if (Input.GetKey(rotateClockwise)) { rotationInput = -1f; }
+    /// <summary>
+    /// Evaluates continuous directional inputs and tracks Shift scaling conditions.
+    /// </summary>
+    private void HandleContinuousMovementInput()
+    {
+        float forwardInput = 0f;
+        float rotationInput = 0f;
 
-        // 3. RESTORED: CHECK KEYBOARD SHOOTING
+        // Process translation vector axis conditions
+        if (Input.GetKey(moveForward)) forwardInput = 1f;
+        if (Input.GetKey(moveBackward)) forwardInput = -1f;
+
+        // Process rotational angular shift criteria
+        if (Input.GetKey(rotateCounterClockwise)) rotationInput = -1f; // Standard negative Z rotation math loop
+        if (Input.GetKey(rotateClockwise)) rotationInput = 1f;
+
+        // Requirement: Detect Turbo contexts using either left or right shift indicators
+        bool isTurboActive = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+        // Forward finalized commands over to the Pawn execution context
+        targetPawn.MoveLocal(forwardInput, rotationInput, isTurboActive);
+    }
+
+    /// <summary>
+    /// Tracks single-click discrete warp steps and processes boundaries safely.
+    /// </summary>
+    private void HandleDiscreteTeleportInput()
+    {
+        // Requirement: Execute once per single isolated keypress cycle (GetKeyDown)
+        if (Input.GetKeyDown(teleportUp))
+        {
+            targetPawn.TeleportWorld(Vector3.up * teleportDistance);
+        }
+        if (Input.GetKeyDown(teleportDown))
+        {
+            targetPawn.TeleportWorld(Vector3.down * teleportDistance);
+        }
+        if (Input.GetKeyDown(teleportLeft))
+        {
+            targetPawn.TeleportWorld(Vector3.left * teleportDistance);
+        }
+        if (Input.GetKeyDown(teleportRight))
+        {
+            targetPawn.TeleportWorld(Vector3.right * teleportDistance);
+        }
+
+        // Requirement: Random layout shuffle bounds trigger via the T Key
+        if (Input.GetKeyDown(randomTeleportKey))
+        {
+            targetPawn.TeleportRandom();
+        }
+    }
+
+    /// <summary>
+    /// Processes firing triggers and system actions.
+    /// </summary>
+    private void HandleActionInputKeys()
+    {
         if (Input.GetKeyDown(shootKey))
         {
-            ShootProjectile();
+            targetPawn.FireProjectile();
         }
 
-        // 4. CHECK QUIT KEY
         if (Input.GetKeyDown(quitKey))
         {
-            Application.Quit();
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#endif
-        }
-    }
-
-    void FixedUpdate()
-    {
-        rb.linearVelocity = movementInput.normalized * moveSpeed;
-
-        if (rotationInput != 0)
-        {
-            float targetRotation = rb.rotation + (rotationInput * rotationSpeed * Time.fixedDeltaTime);
-            rb.MoveRotation(targetRotation);
-        }
-    }
-
-    // 5. RESTORED & OPTIMIZED: The bridge function for keyboard and UI Buttons
-    public void ShootProjectile()
-    {
-        if (playerWeapon != null)
-        {
-            // CHANGE THIS: Replace 'Fire()' with the exact name of your Weapon script's shooting method!
-            playerWeapon.Shoot();
-        }
-        else
-        {
-            Debug.LogWarning("PlayerController cannot shoot because the Player Weapon script slot is unassigned!");
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.QuitToDesktop();
+            }
+            else
+            {
+                Application.Quit();
+            }
         }
     }
 }
