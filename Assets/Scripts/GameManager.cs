@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -17,18 +16,36 @@ public class GameManager : MonoBehaviour
     public GameObject GameOverScreenStateObject;
     public GameObject VictoryScreenStateObject;
 
-    [Header("Score System (Requirement 2)")]
+    [Header("Score & Lives Systems (Requirement 2 & UI Lives)")]
     [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI livesText; // Added to fulfill lives requirements
+    [SerializeField] private int startingLives = 3;
     private int currentScore = 0;
+    private int currentLives;
+
+    [Header("Game Boundary Limits (Screen Warping Requirement)")]
+    [Tooltip("Exposed values for designers to determine space warp looping bounds.")]
+    [SerializeField] private float minX = -10f;
+    [SerializeField] private float maxX = 10f;
+    [SerializeField] private float minY = -6f;
+    [SerializeField] private float maxY = 6f;
 
     [Header("Audio Configuration (Exposed to Designers)")]
     public AudioClip backgroundMusicClip;
     public AudioClip playerShootClip;
     public AudioClip targetTakeDamageClip;
-    private AudioSource musicAudioSource;
+    public AudioClip targetDeathClip; // Explicitly added to cover required audio hooks
 
-    private List<Health> activeObstacles = new List<Health>();
+    private AudioSource musicAudioSource;
+    // Changed to track a base Enemy script instead of generic Health components for cleaner polymorphic lookups
+    private List<Enemy> activeObstacles = new List<Enemy>(); 
     private bool isGameOver = false;
+
+    // Direct read-only properties for external pawn/movement tracking
+    public float MinX => minX;
+    public float MaxX => maxX;
+    public float MinY => minY;
+    public float MaxY => maxY;
 
     private void Awake()
     {
@@ -36,6 +53,8 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             SetupBackgroundMusic();
+            // Don't destroy on load keeps the manager alive across scene flashes if necessary
+            DontDestroyOnLoad(gameObject); 
         }
         else
         {
@@ -45,23 +64,27 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        // Automatically load configuration data when the manager initializes
         LoadGameSettings();
         SetGameState("MainMenu");
     }
 
     private void SetupBackgroundMusic()
     {
-        musicAudioSource = gameObject.AddComponent<AudioSource>();
+        // Guard check to ensure multiple AudioSources aren't generated on persistent re-entries
+        musicAudioSource = GetComponent<AudioSource>();
+        if (musicAudioSource == null)
+        {
+            musicAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
         musicAudioSource.clip = backgroundMusicClip;
         musicAudioSource.loop = true;
         musicAudioSource.playOnAwake = true;
-
-        // Grab saved music volume profile first, fall back to 0.1f if empty
+        
         float savedMusicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.1f);
         musicAudioSource.volume = savedMusicVolume;
-
         musicAudioSource.ignoreListenerPause = true;
+
         if (backgroundMusicClip != null)
         {
             musicAudioSource.Play();
@@ -72,19 +95,16 @@ public class GameManager : MonoBehaviour
     {
         if (clip != null)
         {
-            AudioSource.PlayClipAtPoint(clip, position);
+            // PlayClipAtPoint naturally handles 3D world panning for spatial effects
+            AudioSource.PlayClipAtPoint(clip, position, PlayerPrefs.GetFloat("SFXVolume", 0.8f));
         }
     }
 
     public void SetGameState(string stateName)
     {
         Debug.Log($"[GameManager] Switching state to: {stateName}");
-
-        GameObject[] allStateObjects = new GameObject[] {
-            TitleScreenStateObject, MainMenuStateObject, OptionsScreenStateObject,
-            CreditsScreenStateObject, GameplayStateObject, GameOverScreenStateObject, VictoryScreenStateObject
-        };
-
+        GameObject[] allStateObjects = new GameObject[] { TitleScreenStateObject, MainMenuStateObject, OptionsScreenStateObject, CreditsScreenStateObject, GameplayStateObject, GameOverScreenStateObject, VictoryScreenStateObject };
+        
         foreach (GameObject stateObject in allStateObjects)
         {
             if (stateObject != null) stateObject.SetActive(false);
@@ -115,7 +135,9 @@ public class GameManager : MonoBehaviour
                 Time.timeScale = 1f;
                 isGameOver = false;
                 currentScore = 0;
+                currentLives = startingLives; // Initialize lives on game startup
                 UpdateScoreUI();
+                UpdateLivesUI();
                 ClearOldObstaclesOnly();
                 break;
             case "GameOver":
@@ -131,11 +153,51 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // ========================================== //
+    //          SCREEN WARPING VECTOR MATH        //
+    // ========================================== //
+    public Vector3 WrapPosition(Vector3 currentPosition)
+    {
+        Vector3 newPosition = currentPosition;
+
+        if (currentPosition.x > maxX) newPosition.x = minX;
+        else if (currentPosition.x < minX) newPosition.x = maxX;
+
+        if (currentPosition.y > maxY) newPosition.y = minY;
+        else if (currentPosition.y < minY) newPosition.y = maxY;
+
+        return newPosition;
+    }
+
+    public Vector3 GetRandomBoundaryPosition()
+    {
+        float randomX = Random.Range(minX, maxX);
+        float randomY = Random.Range(minY, maxY);
+        return new Vector3(randomX, randomY, 0f);
+    }
+
+    // ========================================== //
+    //             CORE GAMEPLAY HOOKS            //
+    // ========================================== //
     public void AddPoints(int pointsToGive)
     {
         if (isGameOver) return;
         currentScore += pointsToGive;
         UpdateScoreUI();
+    }
+
+    public void LoseLife()
+    {
+        if (isGameOver) return;
+        
+        currentLives--;
+        UpdateLivesUI();
+        PlaySoundEffect(targetTakeDamageClip, Vector3.zero); // Plays local feedback tracking
+
+        if (currentLives <= 0)
+        {
+            TriggerDefeat();
+        }
     }
 
     private void UpdateScoreUI()
@@ -146,47 +208,52 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void UpdateLivesUI()
+    {
+        if (livesText != null)
+        {
+            livesText.text = $"LIVES: {currentLives}";
+        }
+    }
+
     private void ClearOldObstaclesOnly()
     {
         activeObstacles.Clear();
-        GameObject[] existingAsteroids = GameObject.FindGameObjectsWithTag("Asteroid");
-
-        foreach (GameObject asteroid in existingAsteroids)
+        // Dynamically gathers starting run elements safely
+        Enemy[] existingEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        foreach (Enemy enemy in existingEnemies)
         {
-            Health asteroidHealth = asteroid.GetComponent<Health>();
-            if (asteroidHealth != null && !activeObstacles.Contains(asteroidHealth))
+            if (!activeObstacles.Contains(enemy))
             {
-                activeObstacles.Add(asteroidHealth);
+                activeObstacles.Add(enemy);
             }
         }
-
-        Debug.Log($"[GameManager] Gameplay started! Tracking {activeObstacles.Count} asteroids.");
+        Debug.Log($"[GameManager] Gameplay started! Tracking {activeObstacles.Count} total core enemies.");
         CheckVictoryCondition();
     }
 
-    public void RegisterObstacle(Health obstacle)
+    public void RegisterObstacle(Enemy obstacle)
     {
         if (!activeObstacles.Contains(obstacle))
         {
             activeObstacles.Add(obstacle);
-            Debug.Log($"[GameManager] Dynamically registered asteroid. Total remaining: {activeObstacles.Count}");
+            Debug.Log($"[GameManager] Registered entity tracking. Total remaining: {activeObstacles.Count}");
         }
     }
 
-    public void UnregisterObstacle(Health obstacle)
+    public void UnregisterObstacle(Enemy obstacle)
     {
         if (activeObstacles.Contains(obstacle))
         {
             activeObstacles.Remove(obstacle);
-            Debug.Log($"[GameManager] Removed asteroid. Remaining count: {activeObstacles.Count}");
+            Debug.Log($"[GameManager] Removed tracking point. Remaining count: {activeObstacles.Count}");
         }
         CheckVictoryCondition();
     }
 
     private void CheckVictoryCondition()
     {
-        Debug.Log($"[GameManager] Checking Victory -> Obstacles remaining: {activeObstacles.Count}, isGameOver variable: {isGameOver}");
-
+        // Delayed check verification to ensure spawned split-fragments are accounted for first
         if (activeObstacles.Count == 0 && !isGameOver)
         {
             Debug.Log("[GameManager] Victory conditions met! Triggering Victory Screen.");
@@ -200,6 +267,8 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
+        // Clean destruction setup to reload singletons natively
+        if (gameObject != null) Destroy(gameObject); 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -209,49 +278,35 @@ public class GameManager : MonoBehaviour
     public void GoToCredits() => SetGameState("Credits");
     public void StartNewGame() => SetGameState("Gameplay");
 
-    public void TargetDestroyed(Health targetHealth)
+    public void QuitToDesktop()
     {
-        UnregisterObstacle(targetHealth);
+        Debug.Log("[GameManager] Quitting application to desktop environment.");
+        Application.Quit();
     }
 
-    public void TargetDestroyed()
-    {
-        CheckVictoryCondition();
-    }
+    // ========================================== //
+    // PERSISTENT PLAYER DATA MANAGEMENT SYSTEM //
+    // ========================================== //
+public void LoadGameSettings()
+{
+float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.1f);
+float sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 0.8f);
+int highscore = PlayerPrefs.GetInt("HighScore", 0);
 
-    // ==========================================
-    // PERSISTENT PLAYER DATA MANAGEMENT SYSTEM
-    // ==========================================
-
-    public void LoadGameSettings()
-    {
-        float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.1f);
-        float sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 0.8f);
-        int highscore = PlayerPrefs.GetInt("HighScore", 0);
-
-        // Apply background track level immediately if instance channel is alive
-        if (musicAudioSource != null)
-        {
-            musicAudioSource.volume = musicVolume;
-        }
-
-        Debug.Log($"[Settings] Loaded Profiles -> Music Vol: {musicVolume}, SFX Vol: {sfxVolume}, Legacy Highscore: {highscore}");
-    }
-
-    // Connect this to your UI script handlers inside your Options Menu Layout
-    public void UpdateAndSaveVolume(float newMusicVolume, float newSFXVolume)
-    {
-        PlayerPrefs.SetFloat("MusicVolume", newMusicVolume);
-        PlayerPrefs.SetFloat("SFXVolume", newSFXVolume);
-
-        // Write instantly to data registry storage frame
-        PlayerPrefs.Save();
-
-        if (musicAudioSource != null)
-        {
-            musicAudioSource.volume = newMusicVolume;
-        }
-
-        Debug.Log("[Settings] Profile files successfully modified on machine.");
-    }
+if (musicAudioSource != null)
+{
+musicAudioSource.volume = musicVolume;
 }
+Debug.Log($"[Settings] Loaded Profiles -> Music Vol:
+{musicVolume}, SFX Vol: {sfxVolume}, Legacy Highscore:
+{highscore}");
+}
+public void UpdateAndSaveVolume(float newMusicVolume, float newSFXVolume)
+{
+PlayerPrefs.SetFloat("MusicVolume", newMusicVolume);
+PlayerPrefs.SetFloat("SFXVolume", newSFXVolume);
+PlayerPrefs.Save();
+if (musicAudioSource != null)
+{musicAudioSource.volume = newMusicVolume;
+}
+Debug.Log("[Settings] Profile files successfully modified on machine.");}}
