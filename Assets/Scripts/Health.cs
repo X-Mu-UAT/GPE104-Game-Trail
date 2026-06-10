@@ -1,135 +1,85 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// DESCRIPTION: Handles health tracking and UI updates specifically for the Player Ship.
+/// </summary>
 public class Health : MonoBehaviour, IHealth
 {
+    [Header("--- Player Health Settings ---")]
     public int maxHealth = 100;
     public int currentHealth = 100;
 
-    [Header("UI Reference")]
-    [Tooltip("Used for the screen-space Player Slider.")]
+    [Header("--- UI Elements ---")]
+    [Tooltip("Assign the Screen-Space Player Health Slider UI component here.")]
     public Slider healthSlider;
-    [Tooltip("Used for floating World-Space enemy health bars. Assign the Fill Image component here.")]
-    public Image healthBarFill;
-
-    [Header("Game Manager Tracking")]
-    public bool isPlayer = false;
-
-    [Header("Score Configuration")]
-    [Tooltip("How many points the player gets when this object dies.")]
-    [SerializeField] private int scoreValue = 100;
 
     private void Start()
     {
         currentHealth = maxHealth;
 
         // Initialize the screen-space player slider
-        if (isPlayer && healthSlider != null)
+        if (healthSlider != null)
         {
             healthSlider.maxValue = maxHealth;
             healthSlider.value = maxHealth;
         }
-
-        // Initialize world-space target fill amount to 100%
-
-        if (!isPlayer && healthBarFill != null)
-        {
-            healthBarFill.fillAmount = 1f;
-        }
-
-        if (!isPlayer && GameManager.Instance != null)
-        {
-            GameManager.Instance.RegisterObstacle(this);
-        }
     }
 
+    /// <summary>
+    /// Processes standard damage calculations and updates the player HUD.
+    /// </summary>
     public void TakeDamage(int damageAmount)
     {
         currentHealth -= damageAmount;
+
         // Clamp health so it never drops below zero
         currentHealth = Mathf.Max(0, currentHealth);
-        Debug.Log(gameObject.name + " took damage! Current Health: " + currentHealth);
+        Debug.Log("Player took damage! Current Health: " + currentHealth);
 
-        // ADDED: Play the damage sound effect from the GameManager configurations
+        // Play the player damage audio clip from the GameManager configurations
         if (GameManager.Instance != null && GameManager.Instance.targetTakeDamageClip != null)
         {
             GameManager.Instance.PlaySoundEffect(GameManager.Instance.targetTakeDamageClip, transform.position);
-
         }
 
         // Update the slider visual dynamically when the player takes damage
-        if (isPlayer && healthSlider != null)
+        if (healthSlider != null)
         {
             healthSlider.value = currentHealth;
         }
 
-        // Update the target's World-Space health bar fill percentage
-
-        if (!isPlayer && healthBarFill != null)
-        {
-            // Calculates the fraction between 0.0 and 1.0
-            healthBarFill.fillAmount = (float)currentHealth / maxHealth;
-        }
-
+        // Handle Player Death
         if (currentHealth <= 0)
         {
-            if (!isPlayer)
+            if (GameManager.Instance != null)
             {
-                Debug.Log(gameObject.name + " has died and is being destroyed.");
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.AddPoints(scoreValue);
-                    GameManager.Instance.UnregisterObstacle(this);
-                }
-                Destroy(gameObject);
-                return;
+                // Let the GameManager process losing a life and checking game over states
+                GameManager.Instance.LoseLife();
             }
 
-            if (isPlayer)
+            // Find our local death fx tracker
+            Death deathComponent = GetComponent<Death>();
+            if (deathComponent != null)
             {
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.TriggerDefeat();
-                }
-
-                Death deathComponent = GetComponent<Death>();
-                if (deathComponent != null)
-                {
-                    deathComponent.Die(isPlayer, this);
-                }
-                else
-                {
-                    Debug.LogWarning("Player has no Death component attached!");
-                }
+                // Pass true for isPlayer, and pass null since there is no Enemy component on the player
+                deathComponent.Die(true, null);
             }
+
+            // Instantly restore health variables upon a clean respawn cycle
+            ResetHealth();
         }
     }
 
+    /// <summary>
+    /// Resets health metrics back to maximum capacity upon player respawning.
+    /// </summary>
     public void ResetHealth()
     {
         currentHealth = maxHealth;
 
-        if (isPlayer)
+        if (healthSlider != null)
         {
-            if (healthSlider != null)
-            {
-                healthSlider.value = maxHealth;
-            }
-            else
-            {
-                Debug.LogWarning("Player health slider is null when resetting health.");
-            }
-        }
-        else
-        {
-            if (healthBarFill != null)
-            {
-                healthBarFill.fillAmount = 1f;
-            }
-            else
-            {
-                Debug.LogWarning(gameObject.name + " healthBarFill is null when resetting health.");
-            }
+            healthSlider.value = maxHealth;
         }
     }
 }

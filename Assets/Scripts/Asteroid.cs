@@ -67,7 +67,15 @@ public class Asteroid : Enemy
             return;
         }
 
-        for (int i = 0; i ();
+        for (int i = 0; i < fragmentSpawnCount; i++)
+        {
+            GameObject fragmentObj = Instantiate(lowerTierFragmentPrefab, transform.position, Quaternion.identity) as GameObject;
+            if (fragmentObj == null) continue;
+
+            // Slight offset to avoid exact overlap
+            fragmentObj.transform.position = transform.position + (Vector3)(Random.insideUnitCircle * 0.1f);
+
+            Enemy fragmentEnemy = fragmentObj.GetComponent<Enemy>();
             if (fragmentEnemy != null && GameManager.Instance != null)
             {
                 GameManager.Instance.RegisterObstacle(fragmentEnemy);

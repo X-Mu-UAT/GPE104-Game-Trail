@@ -1,55 +1,61 @@
 using System;
 using UnityEngine;
 
-// CHANGED: Removed 'abstract' so this script can be attached directly to GameObjects in Unity 
+/// <summary>
+/// Handles explosion visual triggers and respawn positioning.
+/// Updated to process polymorphic Enemy signatures per core architectural rules.
+/// </summary>
 public class Death : MonoBehaviour
 {
     private Vector3 startPosition;
 
     public virtual void Awake()
     {
+        // Cache our initial world orientation coordinates
         startPosition = transform.position;
     }
 
-    // UPDATED: Added parameters so the function knows if the player or an obstacle died 
-    public virtual void Die(bool isPlayer, Health healthRef)
+    /// <summary>
+    /// Triggers destruction effects, checks ship context states, and manages system registrations.
+    /// </summary>
+    // FIXED: Changed 'Health healthRef' parameter over to the required structural 'Enemy enemyRef' type
+    public virtual void Die(bool isPlayer, Enemy enemyRef)
     {
         Debug.Log("Die function called on: " + gameObject.name);
 
-        // 🌟 ADDED: Look for the ExplosionFX component on this object and play it right as they die
+        // 1. Play the designer-assigned explosion effects
         ExplosionFX fxScript = GetComponent<ExplosionFX>();
         if (fxScript != null)
         {
             fxScript.PlayExplosion();
         }
 
-        // 1. Reset physical movement states 
+        // 2. Clear out rigid physics momentum states
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            // Note: If using older Unity versions, change 'linearVelocity' to 'velocity' 
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
         }
 
-        // 2. Report the death to the GameManager Singleton 
+        // 3. Coordinate state tracking reports with the single GameManager instance
         if (GameManager.Instance != null)
         {
             if (isPlayer)
             {
-                // Teleport player back to start and reset health as a respawn mechanic 
+                // Respawn behavior: teleport player back to origin points
                 transform.position = startPosition;
-                if (healthRef != null)
-                {
-                    healthRef.ResetHealth();
-                }
             }
             else
             {
-                // Tells GameManager an obstacle was destroyed to update the list count 
-                GameManager.Instance.UnregisterObstacle(healthRef);
+                // FIXED: Safely removes the obstacle track using the polymorphic Enemy type reference signature
+                if (enemyRef != null)
+                {
+                    GameManager.Instance.UnregisterObstacle(enemyRef);
+                }
 
-                // Completely remove the obstacle from the game world 
+                // Remove the targeted physical object instance from memory frames
+
                 Destroy(gameObject);
             }
         }

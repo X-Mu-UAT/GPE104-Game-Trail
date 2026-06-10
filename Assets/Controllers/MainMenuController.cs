@@ -1,0 +1,102 @@
+﻿using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// UI Navigation Controller.
+/// Bridges Unity Canvas button click events directly into the Singleton GameManager state machine.
+/// </summary>
+public class MainMenuController : MonoBehaviour
+{
+    [Header("Optional UI Elements")]
+    [Tooltip("Assign the button used to quit the game so we can safely disable it on platforms like WebGL if needed.")]
+    [SerializeField] private Button quitButton;
+
+    private void Start()
+    {
+        // Safety Verification: Ensure the quit button is wired or handles platform exceptions gracefully
+        if (quitButton != null)
+        {
+            // Direct listener configuration alternate to inspector routing
+            quitButton.onClick.RemoveListener(OnQuitButtonClicked);
+            quitButton.onClick.AddListener(OnQuitButtonClicked);
+        }
+    }
+
+    /// <summary>
+    /// Swaps the active state machine over to standard live gameplay.
+    /// Map this to your 'Play Game' button component.
+    /// </summary>
+    public void OnPlayButtonClicked()
+    {
+        // Force the game clock to unfreeze instantly when clicked
+        Time.timeScale = 1f;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StartNewGame();
+        }
+    }
+    /// <summary>
+    /// Navigates the canvas overlay tree directly into the designer Options Screen layout.
+    /// Map this to your 'Settings / Options' button component.
+    /// </summary>
+    public void OnOptionsButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GoToOptions();
+        }
+    }
+
+    /// <summary>
+    /// Navigates the canvas overlay tree directly into the programmer attribution layout.
+    /// Map this to your 'Credits' button component.
+    /// </summary>
+    public void OnCreditsButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GoToCredits();
+        }
+    }
+
+    /// <summary>
+    /// Returns the layout structure backward from a submenu sublayer to the primary landing frame.
+    /// Map this to any 'Back' button component located inside Credits or Options panels.
+    /// </summary>
+    public void OnBackButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.GoToMainMenu();
+        }
+    }
+
+    /// <summary>
+    /// Re-initializes runtime loops and flashes scene indices to restart the map tracking run cleanly.
+    /// Map this to buttons located inside your Victory and Game Over panels.
+    /// </summary>
+    public void OnRestartButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.RestartGame();
+        }
+    }
+
+    /// <summary>
+    /// Closes operating loops and terminates machine window focus frames safely.
+    /// Map this to your 'Quit Game' button component.
+    /// </summary>
+    public void OnQuitButtonClicked()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.QuitToDesktop();
+        }
+        else
+        {
+            Application.Quit();
+        }
+    }
+}

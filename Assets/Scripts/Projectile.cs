@@ -36,31 +36,25 @@ public class Projectile : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // 1. Safety Check: If the bullet hits the player who shot it, do nothing!
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") || other.CompareTag("Boundary"))
         {
             return;
         }
 
-        // 2. Safety Check: If you hit boundary triggers, ignore them so the bullet can warp instead of dying
-        if (other.CompareTag("Boundary"))
-        {
-            return;
-        }
-
-        // UPDATED: Query the polymorphic abstract Enemy component instead of the old legacy Health file
-        Enemy targetEnemy = other.GetComponent<Enemy>();
+        // Search the object and any parent elements for the structural Enemy script type
+        Enemy targetEnemy = other.GetComponentInParent<Enemy>();
         if (targetEnemy != null)
         {
-            // Apply damage converted safely to an integer
+            // Apply damage parameter
             targetEnemy.TakeDamage((int)damageAmount);
-            
-            // Instantly remove bullet from the world after delivery
+
+            // Destroy bullet instance
             Destroy(gameObject);
-            return; 
+            return;
         }
 
-        // Destroy the bullet if it hits an environment block or unhandled physical entity
+        // Destroy the bullet if it hits a decorative physical barrier
         Destroy(gameObject);
     }
 }
+

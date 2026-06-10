@@ -38,7 +38,7 @@ public class GameManager : MonoBehaviour
 
     private AudioSource musicAudioSource;
     // Changed to track a base Enemy script instead of generic Health components for cleaner polymorphic lookups
-    private List<Enemy> activeObstacles = new List<Enemy>(); 
+    private List<Enemy> activeObstacles = new List<Enemy>();
     private bool isGameOver = false;
 
     // Direct read-only properties for external pawn/movement tracking
@@ -65,8 +65,16 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         LoadGameSettings();
+
+        // 1. Manually ensure victory/defeat overrides are physically off on launch
+        if (VictoryScreenStateObject != null) VictoryScreenStateObject.SetActive(false);
+        if (GameOverScreenStateObject != null) GameOverScreenStateObject.SetActive(false);
+        if (GameplayStateObject != null) GameplayStateObject.SetActive(false);
+
+        // 2. Set the startup baseline cleanly
         SetGameState("MainMenu");
     }
+
 
     private void SetupBackgroundMusic()
     {
@@ -219,6 +227,7 @@ public class GameManager : MonoBehaviour
     private void ClearOldObstaclesOnly()
     {
         activeObstacles.Clear();
+
         // Dynamically gathers starting run elements safely
         Enemy[] existingEnemies = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
         foreach (Enemy enemy in existingEnemies)
@@ -229,7 +238,6 @@ public class GameManager : MonoBehaviour
             }
         }
         Debug.Log($"[GameManager] Gameplay started! Tracking {activeObstacles.Count} total core enemies.");
-        CheckVictoryCondition();
     }
 
     public void RegisterObstacle(Enemy obstacle)
@@ -297,7 +305,7 @@ if (musicAudioSource != null)
 {
 musicAudioSource.volume = musicVolume;
 }
-Debug.Log($"[Settings] Loaded Profiles -> Music Vol:
+Debug.Log($@"[Settings] Loaded Profiles -> Music Vol:
 {musicVolume}, SFX Vol: {sfxVolume}, Legacy Highscore:
 {highscore}");
 }
@@ -307,6 +315,7 @@ PlayerPrefs.SetFloat("MusicVolume", newMusicVolume);
 PlayerPrefs.SetFloat("SFXVolume", newSFXVolume);
 PlayerPrefs.Save();
 if (musicAudioSource != null)
-{musicAudioSource.volume = newMusicVolume;
+{
+musicAudioSource.volume = newMusicVolume;
 }
 Debug.Log("[Settings] Profile files successfully modified on machine.");}}
