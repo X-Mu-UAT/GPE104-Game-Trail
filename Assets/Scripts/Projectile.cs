@@ -37,24 +37,26 @@ public class Projectile : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player") || other.CompareTag("Boundary"))
-        {
             return;
-        }
 
-        // Search the object and any parent elements for the structural Enemy script type
-        Enemy targetEnemy = other.GetComponentInParent<Enemy>();
-        if (targetEnemy != null)
+        // ENEMY DAMAGE
+        Enemy enemy = other.GetComponentInParent<Enemy>();
+        if (enemy != null)
         {
-            // Apply damage parameter
-            targetEnemy.TakeDamage((int)damageAmount);
-
-            // Destroy bullet instance
+            enemy.TakeDamage((int)damageAmount);
             Destroy(gameObject);
             return;
         }
 
-        // Destroy the bullet if it hits a decorative physical barrier
+        // ASTEROID DAMAGE
+        AsteroidHealth asteroid = other.GetComponentInParent<AsteroidHealth>();
+        if (asteroid != null)
+        {
+            asteroid.TakeDamage((int)damageAmount);
+            Destroy(gameObject);
+            return;
+        }
+
         Destroy(gameObject);
     }
 }
-

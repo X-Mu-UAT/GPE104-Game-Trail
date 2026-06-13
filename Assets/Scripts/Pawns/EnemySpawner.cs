@@ -30,7 +30,7 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Minimum distance from the world origin (player spawn) where an enemy can appear, preventing instant deaths.")]
     [SerializeField] private float safeRadiusFromCenter = 3f;
 
-    private void Start()
+    private void OnEnable()
     {
         // Execute the allocation grid sequence once the map initializes
         SpawnInitialEnemyWave();
@@ -41,17 +41,24 @@ public class EnemySpawner : MonoBehaviour
     /// </summary>
     private void SpawnInitialEnemyWave()
     {
-        if (largeAsteroidPrefab == null || ufoPrefab == null) return;
-
-        for (int i = 0; i < totalEnemiesToSpawn; i++)
+        // Safety check to ensure prefabs are assigned in the inspector
+        if (largeAsteroidPrefab == null || ufoPrefab == null)
         {
-            Vector3 spawnPosition = GetSafeRandomSpawnPosition();
-            // ... (rest of your spawning code)
+            Debug.LogError("EnemySpawner: Prefabs are missing in the Inspector panel!");
+            return;
         }
 
-    } // <--- MAKE SURE THIS CLOSING BRACKET EXISTS HERE to end the wave function!
+        // Change this line in your script:
+        for (int i = totalEnemiesToSpawn - 1; i >= 0; i--)
+        {
+            // Your spawning logic goes inside here
+        }
 
-    // 2. Second function starts outside the first one
+    } // end SpawnInitialEnemyWave
+
+    /// <summary>
+    /// Generates randomized coordinates within the GameManager boundaries while validating center safety rules.
+    /// </summary>
     private Vector3 GetSafeRandomSpawnPosition()
     {
         Vector3 randomPosition = Vector3.zero;
@@ -64,14 +71,17 @@ public class EnemySpawner : MonoBehaviour
             {
                 randomPosition = GameManager.Instance.GetRandomBoundaryPosition();
             }
+            else
+            {
+                randomPosition = new Vector3(Random.Range(-8f, 8f), Random.Range(-4f, 4f), 0f);
+            }
+
+            // Increment the counter safely
             attempts++;
         }
+        // Ensure both checks use absolute comparisons (< or >), never a single '=' assignment!
         while (Vector3.Distance(randomPosition, Vector3.zero) < safeRadiusFromCenter && attempts < maxAttempts);
 
         return randomPosition;
     }
-
-    /// <summary>
-    /// Generates randomized coordinates within the GameManager boundaries while validating center safety rules.
-    /// </summary>
 }

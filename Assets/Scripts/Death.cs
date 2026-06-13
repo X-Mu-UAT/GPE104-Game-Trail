@@ -2,23 +2,25 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Handles explosion visual triggers and respawn positioning.
-/// Updated to process polymorphic Enemy signatures per core architectural rules.
+/// AUTHOR: [Your Name]
+/// PROJECT: 2D Spaceship Shooter
+/// DESCRIPTION: Handles explosion visual triggers and respawn positioning.
+/// Updated to capture coordinates on active generation frame.
 /// </summary>
 public class Death : MonoBehaviour
 {
     private Vector3 startPosition;
 
-    public virtual void Awake()
+    // 🌟 FIXED: Changed 'Awake' to 'OnEnable' to prevent caching stale main menu values
+    public virtual void OnEnable()
     {
-        // Cache our initial world orientation coordinates
+        // Cache our initial world origin coordinates the exact moment the gameplay state activates
         startPosition = transform.position;
     }
 
     /// <summary>
     /// Triggers destruction effects, checks ship context states, and manages system registrations.
     /// </summary>
-    // FIXED: Changed 'Health healthRef' parameter over to the required structural 'Enemy enemyRef' type
     public virtual void Die(bool isPlayer, Enemy enemyRef)
     {
         Debug.Log("Die function called on: " + gameObject.name);
@@ -43,19 +45,18 @@ public class Death : MonoBehaviour
         {
             if (isPlayer)
             {
-                // Respawn behavior: teleport player back to origin points
+                // Respawn behavior: teleport player safely back to their designated starting coordinates
                 transform.position = startPosition;
             }
             else
             {
-                // FIXED: Safely removes the obstacle track using the polymorphic Enemy type reference signature
+                // Safely removes the obstacle track using the polymorphic Enemy type reference signature
                 if (enemyRef != null)
                 {
                     GameManager.Instance.UnregisterObstacle(enemyRef);
                 }
 
                 // Remove the targeted physical object instance from memory frames
-
                 Destroy(gameObject);
             }
         }
