@@ -45,6 +45,7 @@ public class UFO : Enemy
         base.Update();
     }
 
+
     /// <summary>
     /// Calculates the vector math direction to the player and moves the UFO towards them.
     /// </summary>

@@ -42,6 +42,8 @@ public class Health : MonoBehaviour, IHealth
             GameManager.Instance.PlaySoundEffect(GameManager.Instance.targetTakeDamageClip, transform.position);
         }
 
+        Debug.Log("Took damage!");
+
         // Update the slider visual dynamically when the player takes damage
         if (healthSlider != null)
         {

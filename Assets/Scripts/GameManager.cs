@@ -154,8 +154,15 @@ public class GameManager : MonoBehaviour
                 break;
 
             case "Credits":
+
+                if (GameplayStateObject != null) GameplayStateObject.SetActive(false);
+
+                if (GameOverScreenStateObject != null) GameOverScreenStateObject.SetActive(false);
+
                 if (CreditsScreenStateObject != null) CreditsScreenStateObject.SetActive(true);
+
                 Time.timeScale = 0f;
+
                 break;
 
             case "Gameplay":
@@ -236,7 +243,6 @@ public class GameManager : MonoBehaviour
             TriggerDefeat();
         }
     }
-
     private void UpdateScoreUI()
     {
         if (scoreText != null)
@@ -291,6 +297,7 @@ public class GameManager : MonoBehaviour
 
     public void QuitToDesktop()
     {
+        Debug.Log("Quit button pressed");
         Application.Quit();
     }
 

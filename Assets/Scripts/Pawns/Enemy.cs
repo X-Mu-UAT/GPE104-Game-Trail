@@ -9,21 +9,37 @@ public abstract class Enemy : MonoBehaviour
     [SerializeField] protected float speed = 2f;
 
     [Header("UI Component Bindings")]
-    [SerializeField] private Slider healthSlider;
-    [SerializeField] private Canvas worldSpaceCanvas;
+
+    private Slider healthSlider;
+    private GameObject spawnedHealthBar;
+    [SerializeField] private GameObject healthBarPrefab;
+    [SerializeField] private GameObject worldSpaceCanvas;
+
 
     protected int currentHealth;
 
     protected virtual void Start()
     {
         currentHealth = maxHealth;
+
+        // Spawn health bar automatically
+        if (healthBarPrefab != null)
+        {
+            spawnedHealthBar = Instantiate(healthBarPrefab, transform.position, Quaternion.identity);
+
+            // Make it follow this enemy
+
+            // Get slider reference from prefab
+            healthSlider = spawnedHealthBar.GetComponentInChildren<Slider>();
+        }
+
         UpdateHealthBarUI();
 
-        // Register this component into the game manager tracking cycle
         if (GameManager.Instance != null)
         {
             GameManager.Instance.RegisterObstacle(this);
         }
+
     }
 
     protected virtual void Update()
@@ -86,3 +102,4 @@ public abstract class Enemy : MonoBehaviour
         Destroy(gameObject);
     }
 }
+

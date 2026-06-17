@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: 60046d0c038a42e449376504b7899c69
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - healthBarPrefab: {fileID: 3752212139475369956, guid: 817b617ff84614e489426f1e9cf8e8b3, type: 3}
+  - worldSpaceCanvas: {instanceID: 0}
+  - lowerTierFragmentPrefab: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
